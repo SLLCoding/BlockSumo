@@ -97,6 +97,7 @@ public class Main extends JavaPlugin implements Listener {
                 if (gamePositions.contains(pos)) continue;
                 final World w = Bukkit.getWorld("sumo");
                 nextGame = new Game(w, pos);
+                gamePositions.add(pos);
                 return;
             }
     }
