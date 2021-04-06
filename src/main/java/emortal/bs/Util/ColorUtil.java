@@ -1,11 +1,13 @@
 package emortal.bs.Util;
 
+import org.bukkit.ChatColor;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ColorUtil {
     public static String color(String s) {
-        return s.replaceAll("&", "§");
+        return ChatColor.translateAlternateColorCodes('&', s);
     }
     public static List<String> colorList(String... s) {
         final List<String> stringList = new ArrayList<>();
