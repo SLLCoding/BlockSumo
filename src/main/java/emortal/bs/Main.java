@@ -321,10 +321,6 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void playerDamageByPlayer(final EntityDamageByEntityEvent e) {
         if (e.getEntity().getType() != EntityType.PLAYER) return;
-        if (e.getDamager().getType() != EntityType.PLAYER) {
-            e.setCancelled(true);
-            return;
-        }
         final Game g = gameMap.get(e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
