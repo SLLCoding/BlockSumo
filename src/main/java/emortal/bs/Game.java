@@ -58,7 +58,7 @@ public class Game {
 
     public Game(World w, GamePosition pos) {
         this.w = w;
-        this.midLoc = new Location(w, (pos.x * 120) + 0.5, 231, (pos.y * 120) + 0.5);
+        this.midLoc = new Location(w, pos.x + 0.5, 231, pos.y + 0.5);
 
         final Schematic map = maps.get(r.nextInt(maps.size()));
         final com.sk89q.worldedit.world.World worldeditWorld = BukkitUtil.getLocalWorld(w);
