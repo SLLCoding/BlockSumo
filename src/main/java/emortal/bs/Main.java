@@ -95,7 +95,6 @@ public class Main extends JavaPlugin implements Listener {
             for (int y = -10; y < 10; y++) {
                 final GamePosition pos = new GamePosition(x,y);
                 if (gamePositions.contains(pos)) continue;
-                gamePositions.add(pos);
                 final World w = Bukkit.getWorld("sumo");
                 nextGame = new Game(w, pos);
                 gamePositions.add(pos);
