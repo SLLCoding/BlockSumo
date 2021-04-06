@@ -438,7 +438,7 @@ public class Game {
         Collections.reverse(sortedStats);
         lines.add(" ");
         for (PlayerStats value : sortedStats) {
-            if (value.lives == 0) continue;
+            if (value.lives < 1) continue;
             lines.add(color(value.player.getDisplayName() + " &8| " + value.coloredLives() + " &8(" + value.kills + ")"));
         }
 
