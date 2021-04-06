@@ -2,4 +2,3 @@ main: emortal.bs.Main
 name: EmortalBS
 version: 1.0.0
 author: emortal
-depend: [SlimeWorldManager]
