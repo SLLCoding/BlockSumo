@@ -29,7 +29,7 @@ public class Game {
 
     public static final int playersNeededToStart = 2;
     public static final int gameWidth = 15;
-    public static final int maxPlayers = 8;
+    public static final int maxPlayers = 12;
 
     public static final int tntRainSecs = 8;
     public static final int respawnSecs = 5;
