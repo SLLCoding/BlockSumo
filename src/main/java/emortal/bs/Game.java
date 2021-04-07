@@ -77,14 +77,6 @@ public class Game {
         refreshGame();
         started = true;
 
-        for (PlayerStats stat : statMap.values())
-            for (PlayerStats stat1 : statMap.values()) {
-                Team t = stat.player.getScoreboard().getTeam(stat1.player.getName());
-                if (t == null) t = stat.player.getScoreboard().registerNewTeam(stat1.player.getName());
-                t.setPrefix(stat1.teamColor.chatColor + "");
-                t.setSuffix(" &8- " + stat1.coloredLives());
-            }
-
         updateLives();
 
         tasks.add(TaskUtil.timer(midSpawnSecs*20, midSpawnSecs*20, () -> {
@@ -219,11 +211,13 @@ public class Game {
         dead.remove(p);
         statMap.remove(p);
         gameMap.remove(p);
-        updateLives();
 
+        if (getPlayers().size() > 0) updateLives();
         if (getPlayers().size() <= 1) {
             if (!started && starting) {
+                log("Cancelled start!");
                 gameStartTask.cancel();
+                starting = false;
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
                 players.get(0).playSound(players.get(0).getLocation(), Sound.CLICK, 1f, 1f);
                 return;
@@ -235,8 +229,8 @@ public class Game {
 
     public Location getRandomSpawnLocation() {
         final double angle = r.nextDouble() * 360;
-        final int x = (int) (Math.cos(angle) * (gameWidth - 4));
-        final int z = (int) (Math.sin(angle) * (gameWidth - 4));
+        final int x = (int) (Math.cos(angle) * (gameWidth - 2));
+        final int z = (int) (Math.sin(angle) * (gameWidth - 2));
 
         final Location loc = midLoc.clone().add(x, -2, z);
         final Vector angle1 = midLoc.clone().subtract(loc).toVector();
@@ -454,6 +448,7 @@ public class Game {
 
             for (PlayerStats value1 : sortedStats) {
                 Team t = value.player.getScoreboard().getTeam(value1.player.getName());
+                if (t == null) t = value1.player.getScoreboard().registerNewTeam(value1.player.getName());
 
                 t.setPrefix(value1.teamColor.chatColor + "");
                 t.setSuffix(color(" &8| " + value1.coloredLives()));

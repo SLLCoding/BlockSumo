@@ -59,8 +59,8 @@ public class Main extends JavaPlugin implements Listener {
     public static Game nextGame;
     public static Main instance;
 
-    public void log(String s) {
-        getServer().getConsoleSender().sendMessage(color("&dEmortalBS &7| " + s));
+    public static void log(String s) {
+        Bukkit.getConsoleSender().sendMessage(color("&dEmortalBS &7| " + s));
     }
 
     @Override
@@ -119,6 +119,7 @@ public class Main extends JavaPlugin implements Listener {
 
         final Game g = gameMap.get(e.getPlayer());
         if (g == null) return;
+
         g.removePlayer(e.getPlayer());
     }
 
