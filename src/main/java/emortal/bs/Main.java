@@ -7,6 +7,7 @@ import com.github.fierioziy.particlenativeapi.api.Particles_1_8;
 import com.github.fierioziy.particlenativeapi.core.ParticleNativeCore;
 import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
+import emortal.bs.Util.TaskUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -106,19 +107,7 @@ public class Main extends JavaPlugin implements Listener {
     public void playerJoin(final PlayerJoinEvent e) {
         final Player p = e.getPlayer();
 
-        p.setGameMode(GameMode.SPECTATOR);
-        p.teleport(nextGame.midLoc);
         nextGame.addPlayer(p);
-
-        for (Player player : getServer().getOnlinePlayers()) {
-            if (nextGame.getPlayers().contains(player)) continue;
-            player.hidePlayer(p);
-            p.hidePlayer(player);
-        }
-        for (Player player : nextGame.getPlayers()) {
-            player.showPlayer(p);
-            p.showPlayer(player);
-        }
 
         e.setJoinMessage(color("&8(&a" + nextGame.getPlayers().size() + "&8/&a" + Game.maxPlayers + "&8) " + p.getDisplayName() + "&7 joined"));
     }
@@ -166,7 +155,6 @@ public class Main extends JavaPlugin implements Listener {
 
 
         final Game g = gameMap.get(e.getPlayer());
-        final PlayerStats stats = g.statMap.get(e.getPlayer());
         final Location loc = e.getBlockPlaced().getLocation().subtract(g.midLoc.getBlockX(), 0, g.midLoc.getBlockZ());
 
         if (e.getBlockAgainst().getType() == Material.BARRIER) {
@@ -179,7 +167,6 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        e.getBlockPlaced().setData((byte) stats.teamColor.woolColor);
         e.getItemInHand().setAmount(64);
         if (Math.abs(loc.getX()) > Game.gameWidth + 2 || Math.abs(loc.getZ()) > Game.gameWidth + 2) {
             e.setCancelled(true);
@@ -197,32 +184,8 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void blockExplode(final BlockExplodeEvent e) {
         e.blockList().removeIf(b -> b.getType() != Material.WOOL);
-
-        final List<FallingBlock> fallingBlockList = new ArrayList<>();
-
-        for (Block b : e.blockList()) {
-            if (r.nextInt(2) == 0) continue;
-            FallingBlock fallingBlock = e.getBlock().getWorld().spawnFallingBlock(b.getLocation(), b.getType(), b.getData());
-            fallingBlock.setVelocity(e.getBlock().getLocation().subtract(b.getLocation()).toVector().multiply(0.35).setY(r.nextDouble()));
-
-            fallingBlockList.add(fallingBlock);
-        }
-
-        getServer().getScheduler().runTaskLater(this, () -> {
-            if (fallingBlockList.size() == 0) return;
-
-            for (FallingBlock f : fallingBlockList) {
-                f.remove();
-            }
-        }, 20);
     }
 
-    @EventHandler
-    public void fallingBlockLand(final EntityChangeBlockEvent e) {
-        if (e.getEntityType() != EntityType.FALLING_BLOCK) return;
-        e.getEntity().remove();
-        e.setCancelled(true);
-    }
     @EventHandler
     public void onPlayerMove(final PlayerMoveEvent e) {
         final Player p = e.getPlayer();
@@ -310,35 +273,36 @@ public class Main extends JavaPlugin implements Listener {
         final Game g = gameMap.get(e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
-
         if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
             if (stats.spawnProtectionTask != null) {
+                e.setCancelled(true);
                 e.getEntity().getWorld().playSound(e.getEntity().getLocation(), Sound.DIG_WOOD, 1, 1);
             }
+        }
+
+        if (g.diamondBlockPlayer == e.getEntity()) {
+            g.diamondBlockPlayer.setLevel(0);
         }
     }
 
     @EventHandler
     public void playerDamageByPlayer(final EntityDamageByEntityEvent e) {
         if (e.getEntity().getType() != EntityType.PLAYER) return;
+
         final Game g = gameMap.get(e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
+        final Player damager;
         if (e.getDamager() instanceof Projectile) {
-            stats.setLastHitBy((Player) ((Projectile) e.getDamager()).getShooter());
-
-            if (g.diamondBlockPlayer == e.getEntity()) {
-                g.diamondBlockPlayer.setLevel(0);
-            }
-            return;
+            damager = (Player) ((Projectile) e.getDamager()).getShooter();
+        } else {
+            damager = (Player)e.getDamager();
         }
-        if (e.getEntityType() != EntityType.PLAYER) return;
 
-        stats.setLastHitBy((Player) e.getDamager());
+        final PlayerStats damagerStats = g.statMap.get(damager);
+        if (damagerStats.spawnProtectionTask != null) damagerStats.removeSpawnProtection(r);
 
-        if (g.diamondBlockPlayer == e.getEntity()) {
-            g.diamondBlockPlayer.setLevel(0);
-        }
+        stats.setLastHitBy(damager);
     }
 
     @EventHandler
@@ -365,14 +329,13 @@ public class Main extends JavaPlugin implements Listener {
 
         final Location loc = e.getEntity().getLocation();
 
-
-
         for (Entity nearbyEntity : e.getEntity().getNearbyEntities(10, 10, 10)) {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
-            if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 5) continue;
+            if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = gameMap.get(nearbyEntity);
             final PlayerStats stats = g.statMap.get(nearbyEntity);
+            if (stats.spawnProtectionTask != null) continue;
 
             final double xPos = nearbyEntity.getLocation().getX() - loc.getX();
             final double yPos = nearbyEntity.getLocation().getY() - loc.getY() + 0.3;
@@ -392,10 +355,11 @@ public class Main extends JavaPlugin implements Listener {
 
         for (Entity nearbyEntity : e.getEntity().getNearbyEntities(10, 10, 10)) {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
-            if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 5) continue;
+            if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = gameMap.get(nearbyEntity);
             final PlayerStats stats = g.statMap.get(nearbyEntity);
+            if (stats.spawnProtectionTask != null) continue;
 
             final double xPos = nearbyEntity.getLocation().getX() - loc.getX();
             final double yPos = nearbyEntity.getLocation().getY() - loc.getY() + 0.3;
@@ -421,22 +385,24 @@ public class Main extends JavaPlugin implements Listener {
 
         switch (e.getItem().getType()) {
             case FIREBALL:
+                e.setCancelled(true);
+
                 p.getWorld().playSound(p.getLocation(), Sound.GHAST_FIREBALL, 1, 1);
                 p.launchProjectile(Fireball.class, p.getEyeLocation().getDirection().multiply(0.5));
 
-                e.setCancelled(true);
                 if (e.getItem().getAmount() == 1) p.setItemInHand(null);
                 else e.getItem().setAmount(e.getItem().getAmount() - 1);
 
                 return;
 
             case NETHER_STAR:
+                e.setCancelled(true);
+
                 stats.lives++;
 
                 g.updateLives();
                 p.playSound(p.getLocation(), Sound.LEVEL_UP, 1, 1);
 
-                e.setCancelled(true);
                 if (e.getItem().getAmount() == 1) p.setItemInHand(null);
                 else e.getItem().setAmount(e.getItem().getAmount() - 1);
 
@@ -462,18 +428,7 @@ public class Main extends JavaPlugin implements Listener {
                 p.getWorld().playSound(tnt.getLocation(), Sound.FUSE, 1, 1);
                 p.getWorld().playSound(tnt.getLocation(), Sound.DIG_GRASS, 1, 1);
 
-                new BukkitRunnable() {
-                    float i = 3;
-                    @Override
-                    public void run() {
-                        i -= 0.2;
-                        if (i <= 0) {
-                            cancel();
-                            return;
-                        }
-                        tnt.setCustomName((i > 2 ? ChatColor.GREEN : i > 1 ? ChatColor.GOLD : ChatColor.RED) + "" + (double)Math.round(i * 10D) / 10D);
-                    }
-                }.runTaskTimerAsynchronously(this, 0, 4);
+                TaskUtil.later(5*20, () -> entityMap.remove(tnt));
 
                 return;
         }

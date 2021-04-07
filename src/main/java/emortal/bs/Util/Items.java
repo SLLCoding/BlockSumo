@@ -16,7 +16,6 @@ import static emortal.bs.Util.ColorUtil.color;
 import static emortal.bs.Util.ColorUtil.colorList;
 
 public class Items {
-    public static final ItemStack woolStack = new ItemStack(Material.WOOL, 64);
     public static final ItemStack shears = new ItemStack(Material.SHEARS);
     public static final ItemStack tnt = new ItemStack(Material.TNT);
     public static final ItemStack fireball = new ItemStack(Material.FIREBALL);

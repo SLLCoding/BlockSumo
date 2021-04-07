@@ -38,7 +38,7 @@ public class Game {
     public static final int everywhereSpawnSecs = midSpawnSecs / 2;
 
     private final List<Player> players = new ArrayList<>();
-    private final List<Player> spectators = new ArrayList<>();
+    private final List<Player> dead = new ArrayList<>();
 
     public final HashMap<Player, PlayerStats> statMap = new HashMap<>();
     public final List<BukkitTask> tasks = new ArrayList<>();
@@ -64,6 +64,13 @@ public class Game {
         final com.sk89q.worldedit.world.World worldeditWorld = BukkitUtil.getLocalWorld(w);
         final com.sk89q.worldedit.Vector worldeditVector = BukkitUtil.toVector(midLoc.clone().subtract(0, 1, 0));
         map.paste(worldeditWorld, worldeditVector);
+    }
+
+    public List<Player> getPlayers() {
+        final List<Player> list = new ArrayList<>();
+        list.addAll(players);
+        list.addAll(dead);
+        return list;
     }
 
     public void start() {
@@ -98,14 +105,14 @@ public class Game {
             i.setCustomName(itemToGive.getItemMeta().getDisplayName());
             i.setCustomNameVisible(true);
 
-            for (Player p1 : players) {
+            for (Player p1 : getPlayers()) {
                 p1.sendMessage(color(itemToGive.getItemMeta().getDisplayName() + " &7has spawned in middle!"));
             }
 
             if (!hasRainedTNT && r.nextInt(100) < 5) {
                 hasRainedTNT = true;
 
-                for (Player p1 : players) {
+                for (Player p1 : getPlayers()) {
                     p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
                     p1.sendMessage(color("&c&l>> &6TNT is raining from the sky!"));
                 }
@@ -120,25 +127,25 @@ public class Game {
                             return;
                         }
                         for (Player p : players) {
-                            final TNTPrimed tnt = (TNTPrimed) w.spawnEntity(p.getEyeLocation(), EntityType.PRIMED_TNT);
-                            p.getWorld().playSound(p.getEyeLocation(), Sound.FIZZ, 1, 1);
+                            final TNTPrimed tnt = (TNTPrimed) w.spawnEntity(p.getLocation(), EntityType.PRIMED_TNT);
+                            p.getWorld().playSound(p.getLocation(), Sound.FUSE, 1, 1);
                             tnt.setFuseTicks(3*20);
                             tnt.setVelocity(new Vector(0, 0, 0));
                         }
                     }
-                }.runTaskTimer(instance, 0, 25));
+                }.runTaskTimer(instance, 0, 20));
             }
         }));
 
         tasks.add(TaskUtil.timerAsync(everywhereSpawnSecs * 20, everywhereSpawnSecs * 20, () -> {
             final ItemStack itemToGive = Items.everywhereLoot.get(r.nextInt(Items.everywhereLoot.size()));
-            for (Player p1 : players) {
+            for (Player p1 : getPlayers()) {
                 p1.sendMessage(color("&7Everyone was given a " + itemToGive.getItemMeta().getDisplayName() + "&7!"));
-                p1.getInventory().addItem(itemToGive);
+                if (p1.getGameMode() == GameMode.SURVIVAL) p1.getInventory().addItem(itemToGive);
             }
         }));
 
-        for (Player player : players) {
+        for (Player player : getPlayers()) {
             respawn(player);
             player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 1);
         }
@@ -146,11 +153,12 @@ public class Game {
 
     public void addPlayer(Player p) {
         p.getInventory().clear();
+        p.teleport(midLoc);
+        p.setGameMode(GameMode.SPECTATOR);
 
         players.add(p);
         gameMap.put(p, this);
 
-        // random team color
         TeamColor teamColor = TeamColor.values()[r.nextInt(TeamColor.values().length)];
 
         if (p.getName().equalsIgnoreCase("emortl")) teamColor = TeamColor.PURPLE;
@@ -166,7 +174,17 @@ public class Game {
         chestplate.setItemMeta(chestMeta);
         p.getInventory().setChestplate(chestplate);
 
-        if (players.size() == playersNeededToStart && !starting) {
+        for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+            if (players.contains(player)) continue;
+            player.hidePlayer(p);
+            p.hidePlayer(player);
+        }
+        for (Player player : getPlayers()) {
+            player.showPlayer(p);
+            p.showPlayer(player);
+        }
+
+        if (!starting && getPlayers().size() >= playersNeededToStart) {
             starting = true;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = gameStartSecs;
@@ -179,7 +197,7 @@ public class Game {
                     }
 
                     if (i % 5 == 0 || i < 5) {
-                        for (Player player : players) {
+                        for (Player player : getPlayers()) {
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
                             player.sendMessage(color("&6Game starting in &a&l" + i + " &6seconds!"));
                             title(player, color("&a" + i), "", 0, 30, 10);
@@ -190,7 +208,7 @@ public class Game {
                 }
             }.runTaskTimer(instance, 0, 20));
         }
-        if (players.size() == maxPlayers) {
+        if (getPlayers().size() == maxPlayers) {
             refreshGame();
             gameStartTask.cancel();
             start();
@@ -198,11 +216,12 @@ public class Game {
     }
     public void removePlayer(Player p) {
         players.remove(p);
+        dead.remove(p);
         statMap.remove(p);
         gameMap.remove(p);
         updateLives();
 
-        if (players.size() == 1) {
+        if (getPlayers().size() <= 1) {
             if (!started) {
                 gameStartTask.cancel();
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
@@ -212,15 +231,6 @@ public class Game {
             victory(players.get(0));
             return;
         }
-
-        if (players.size() == 0) {
-            reset();
-            started = false;
-            spectators.clear();
-        }
-    }
-    public List<Player> getPlayers() {
-        return players;
     }
 
     public Location getRandomSpawnLocation() {
@@ -238,7 +248,8 @@ public class Game {
         w.getBlockAt(loc.clone().add(0, 2, 0)).setType(Material.AIR);
 
         final Block b = w.getBlockAt(loc);
-        b.setType(Material.WOOL);
+        b.setType(Material.BEDROCK);
+        TaskUtil.later(20*5, () -> { b.setType(Material.WOOL); });
 
         return loc.clone().add(0, 1, 0);
     }
@@ -258,36 +269,49 @@ public class Game {
         }
         stats.lives--;
 
+        final boolean wasFinal = stats.lives <= 0;
+
         final Player lastHitBy = stats.getLastHitBy();
         if (lastHitBy != null) {
             if (playerWhoDied == lastHitBy) {
-                for (Player p : players) {
-                    p.sendMessage(color(playerWhoDied.getDisplayName() + " &7killed themselves. " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
+                for (Player p : getPlayers()) {
+                    p.sendMessage(color(playerWhoDied.getDisplayName() + " &7killed themselves. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             } else {
                 lastHitBy.playSound(lastHitBy.getLocation(), Sound.NOTE_PLING, 1, 1);
-                lastHitBy.sendMessage(color("&7You killed " + playerWhoDied.getDisplayName() + "&7! " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
+                lastHitBy.sendMessage(color("&7You killed " + playerWhoDied.getDisplayName() + "&7! " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
 
                 statMap.get(lastHitBy).kills++;
 
-                for (Player p : players) {
+                for (Player p : getPlayers()) {
                     if (p == lastHitBy) continue;
                     p.sendMessage(color(playerWhoDied.getDisplayName() + " &7was killed by " + lastHitBy.getDisplayName() + "&7. " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             }
         } else {
-            for (Player p : players) {
-                p.sendMessage(color(playerWhoDied.getDisplayName() + " &7died. " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
+            for (Player p : getPlayers()) {
+                p.sendMessage(color(playerWhoDied.getDisplayName() + " &7died. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
             }
         }
 
         updateLives();
         title(playerWhoDied, color("&c&lYOU DIED!"), color(lastHitBy == null ? "" : lastHitBy == playerWhoDied ? "&7You killed yourself" : "&7Killed by " + lastHitBy.getDisplayName()), 0, 20, 10);
 
-        if (stats.lives <= 0) {
+        if (wasFinal) {
+            dead.add(playerWhoDied);
             players.remove(playerWhoDied);
-            spectators.add(playerWhoDied);
-            if (players.size() == 1) {
+
+            final Firework fw = (Firework) w.spawnEntity(playerWhoDied.getLocation(), EntityType.FIREWORK);
+            final FireworkMeta fwm = fw.getFireworkMeta();
+
+            final FireworkEffect effect = FireworkEffect.builder().withColor(stats.teamColor.color).build();
+            fwm.addEffect(effect);
+            fwm.setPower(1);
+            fw.setFireworkMeta(fwm);
+
+            TaskUtil.laterAsync(2, fw::detonate);
+
+            if (players.size() <= 1) {
                 victory(players.get(0));
             }
             return;
@@ -318,19 +342,18 @@ public class Game {
         if (victorying) return;
         playerWhoDied.setLevel(0);
 
+        final PlayerStats stats = statMap.get(playerWhoDied);
+
         for (PotionEffect potion : playerWhoDied.getActivePotionEffects()) {
             playerWhoDied.removePotionEffect(potion.getType());
         }
         playerWhoDied.getInventory().clear();
-        playerWhoDied.getInventory().setItem(1, Items.woolStack);
+        playerWhoDied.getInventory().setItem(1, new ItemStack(Material.WOOL, (byte)64, (short) stats.teamColor.woolColor));
         playerWhoDied.getInventory().setItem(2, Items.shears);
         playerWhoDied.getInventory().setHeldItemSlot(1);
 
         playerWhoDied.teleport(getRandomSpawnLocation());
-        playerWhoDied.setNoDamageTicks((respawnSecs * 20) + 10);
         playerWhoDied.setGameMode(GameMode.SURVIVAL);
-
-        final PlayerStats stats = statMap.get(playerWhoDied);
 
         stats.spawnProtectionTask = new BukkitRunnable() {
             int i = 0;
@@ -341,14 +364,14 @@ public class Game {
 
                 if (i >= (respawnSecs * 4)) {
                     cancel();
+                    stats.spawnProtectionTask = null;
 
                     actionbar(playerWhoDied, "&8Your spawn protection has worn off");
                     playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.FIZZ, 0.25f, 1);
-                    stats.spawnProtectionTask = null;
 
-                    for (byte a = 0; a < 20; a++) {
+                    for (byte a = 0; a < 40; a++) {
                         final Object particlePacket = particles.SMOKE_LARGE().packetMotion(false, playerWhoDied.getLocation().clone().add(r.nextDouble()*0.2, 0.5+(r.nextDouble()*0.2), r.nextDouble()*0.2), Vector.getRandom().multiply(0.3));
-                        particles.sendPacket(players, particlePacket);
+                        particles.sendPacket(getPlayers(), particlePacket);
                     }
 
                     return;
@@ -360,7 +383,7 @@ public class Game {
 
                 for (double a = 0; a < Math.PI * 2; a+= Math.PI / 5) {
                     final Object particlePacket = particles.VILLAGER_HAPPY().packet(false, playerWhoDied.getLocation().clone().add(Math.cos(a), 1, Math.sin(a)));
-                    particles.sendPacket(players, particlePacket);
+                    particles.sendPacket(getPlayers(), particlePacket);
                 }
 
             }
@@ -369,14 +392,12 @@ public class Game {
         tasks.add(stats.spawnProtectionTask);
     }
 
-    public void victory(Player p) {
+    public void victory(Player winner) {
         if (victorying) return;
         victorying = true;
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
-        spectators.addAll(players);
-        players.clear();
 
         final List<PlayerStats> killList = new ArrayList<>(statMap.values());
 
@@ -388,7 +409,7 @@ public class Game {
         sb.append("&8&m" + Strings.repeat(" ", 50) + "&r\n");
         sb.append(Strings.repeat(" ", 20) + "%WINMSG%");
         sb.append("\n&r");
-        sb.append("            &7Winner: " + p.getDisplayName());
+        sb.append("            &7Winner: " + winner.getDisplayName());
         sb.append(" &r\n ");
         for (byte i = 0; i < Math.min(killList.size(), 3); i++) {
             sb.append("\n    " + (i == 0 ? ChatColor.GREEN + "1st" : i == 1 ? ChatColor.GOLD + "2nd" : ChatColor.RED + "3rd") + " &7- " + killList.get(i).player.getDisplayName() + " &7- " + killList.get(i).kills);
@@ -397,35 +418,18 @@ public class Game {
 
         final String s = sb.toString();
 
-        for (Player player : spectators) {
-            final String winMsg = player == p ? "&6&lVICTORY" : "&c&lDEFEAT";
-            title(player, color(winMsg), "", 0, 100, 0);
+        for (Player player : getPlayers()) {
+            final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
+            title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
             gameMap.remove(player);
-
             player.sendMessage(color(s.replace("%WINMSG%", winMsg)));
             player.setGameMode(GameMode.SPECTATOR);
         }
 
         TaskUtil.later(5 * 20, () -> {
-            reset();
-
-            for (Player player : spectators) {
-                gameMap.remove(player);
-
-                player.setGameMode(GameMode.SPECTATOR);
-                player.teleport(nextGame.midLoc);
+            for (Player player : getPlayers()) {
                 nextGame.addPlayer(player);
-
-                for (Player p1 : instance.getServer().getOnlinePlayers()) {
-                    if (nextGame.getPlayers().contains(p1)) continue;
-                    p1.hidePlayer(player);
-                    player.hidePlayer(p1);
-                }
-                for (Player p1 : nextGame.getPlayers()) {
-                    p1.showPlayer(player);
-                    player.showPlayer(p1);
-                }
             }
         });
     }
@@ -456,19 +460,6 @@ public class Game {
                 t.addEntry(value1.player.getName());
             }
         }
-    }
-
-    private void reset() {
-        for (PlayerStats stat : statMap.values()) {
-            for (Team team : stat.board.getScoreboard().getTeams()) {
-                team.unregister();
-            }
-        }
-
-        statMap.clear();
-        tasks.clear();
-        hasRainedTNT = false;
-        victorying = false;
     }
 
 }
