@@ -4,6 +4,7 @@ import com.boydti.fawe.object.schematic.Schematic;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import emortal.bs.Util.GamePosition;
+import emortal.bs.Util.GameState;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
 import org.bukkit.*;
@@ -47,10 +48,9 @@ public class Game {
     private final World w;
     public final Location midLoc;
 
-    public boolean started = false;
-    private boolean starting = false;
     private boolean hasRainedTNT = false;
-    private boolean victorying = false;
+
+    private GameState state = GameState.WAITING;
 
     private final GamePosition pos;
     public BukkitTask gameStartTask = null;
@@ -77,7 +77,7 @@ public class Game {
 
     public void start() {
         refreshGame();
-        started = true;
+        state = GameState.PLAYING;
 
         updateLives();
 
@@ -178,8 +178,8 @@ public class Game {
             p.showPlayer(player);
         }
 
-        if (!starting && getPlayers().size() >= playersNeededToStart) {
-            starting = true;
+        if (!state.equals(GameState.STARTING) && getPlayers().size() >= playersNeededToStart) {
+            state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = gameStartSecs;
                 @Override
@@ -216,15 +216,14 @@ public class Game {
 
         if (getPlayers().size() > 0) updateLives();
         if (getPlayers().size() <= 1) {
-            if (!started && starting) {
+            if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
-                starting = false;
+                state = GameState.WAITING;
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
                 players.get(0).playSound(players.get(0).getLocation(), Sound.CLICK, 1f, 1f);
                 return;
             }
             victory(players.get(0));
-            return;
         }
     }
 
@@ -250,7 +249,7 @@ public class Game {
     }
 
     public void playerDied(Player playerWhoDied) {
-        if (victorying) return;
+        if (state.equals(GameState.ENDING)) return;
 
         playerWhoDied.closeInventory();
         playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.VILLAGER_DEATH, 0.5f, 1.5f);
@@ -334,7 +333,7 @@ public class Game {
     }
 
     public void respawn(Player playerWhoDied) {
-        if (victorying) return;
+        if (state.equals(GameState.ENDING)) return;
         playerWhoDied.setLevel(0);
 
         final PlayerStats stats = statMap.get(playerWhoDied);
@@ -388,8 +387,8 @@ public class Game {
     }
 
     public void victory(Player winner) {
-        if (victorying) return;
-        victorying = true;
+        if (state.equals(GameState.ENDING)) return;
+        state = GameState.ENDING;
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
