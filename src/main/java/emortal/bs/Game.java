@@ -448,7 +448,7 @@ public class Game {
 
             for (PlayerStats value1 : sortedStats) {
                 Team t = value.player.getScoreboard().getTeam(value1.player.getName());
-                if (t == null) t = value1.player.getScoreboard().registerNewTeam(value1.player.getName());
+                if (t == null) t = value.player.getScoreboard().registerNewTeam(value1.player.getName());
 
                 t.setPrefix(value1.teamColor.chatColor + "");
                 t.setSuffix(color(" &8| " + value1.coloredLives()));
