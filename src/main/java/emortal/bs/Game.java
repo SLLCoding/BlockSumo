@@ -1,6 +1,7 @@
 package emortal.bs;
 
 import com.boydti.fawe.object.schematic.Schematic;
+import com.github.fierioziy.particlenativeapi.api.types.ParticleTypeMotion;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import emortal.bs.Util.GamePosition;
@@ -20,6 +21,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static emortal.bs.Main.*;
 import static emortal.bs.Util.ColorUtil.color;
@@ -52,6 +54,11 @@ public class Game {
 
     private GameState state = GameState.WAITING;
 
+    private long startTime;
+    private boolean hasSkyBorder = false;
+    private double skyBorderHeight = 260;
+    private double skyBorderTarget = 260;
+
     private final GamePosition pos;
     public BukkitTask gameStartTask = null;
     public BukkitTask diamondBlockTask = null;
@@ -79,6 +86,8 @@ public class Game {
         refreshGame();
         state = GameState.PLAYING;
 
+        startTime = System.currentTimeMillis();
+
         updateLives();
 
         tasks.add(TaskUtil.timer(midSpawnSecs*20, midSpawnSecs*20, () -> {
@@ -98,6 +107,16 @@ public class Game {
             i.setVelocity(new Vector(0, 0, 0));
             i.setCustomName(itemToGive.getItemMeta().getDisplayName());
             i.setCustomNameVisible(true);
+
+            if (!hasSkyBorder && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                skyBorderTarget = 250;
+                hasSkyBorder = true;
+                for (Player p1 : getPlayers()) {
+                    p1.sendMessage(color("&cThe sky is falling in!"));
+                }
+            } if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(7)) {
+                skyBorderTarget = 240;
+            }
 
             for (Player p1 : getPlayers()) {
                 p1.sendMessage(color(itemToGive.getItemMeta().getDisplayName() + " &7has spawned in middle!"));
@@ -138,6 +157,31 @@ public class Game {
                 if (p1.getGameMode() == GameMode.SURVIVAL) p1.getInventory().addItem(itemToGive);
             }
         }));
+
+        ParticleTypeMotion particle = particles.FLAME();
+        tasks.add(new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (hasSkyBorder) {
+                    for (Player player : players) {
+                        for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
+                            for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
+                                particles.sendPacket(players, particle.packet(true, x, skyBorderHeight, z));
+                                particles.sendPacket(dead, particle.packet(true, x, skyBorderHeight, z));
+                            }
+                        }
+                        if (player.getLocation().getY() + 1.75 >= skyBorderHeight) {
+                            playerDied(player);
+                        }
+                    }
+                    if (Math.round(skyBorderHeight) > Math.round(skyBorderTarget)) {
+                        skyBorderHeight = skyBorderHeight - 0.01;
+                    } else if (Math.round(skyBorderHeight) < Math.round(skyBorderTarget)) {
+                        skyBorderHeight = skyBorderHeight + 0.01;
+                    }
+                }
+            }
+        }.runTaskTimer(instance, 1, 1));
 
         for (Player player : getPlayers()) {
             respawn(player);
@@ -280,6 +324,8 @@ public class Game {
 
     public void playerDied(Player playerWhoDied) {
         if (state.equals(GameState.ENDING)) return;
+
+        playerWhoDied.teleport(midLoc);
 
         playerWhoDied.closeInventory();
         playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.VILLAGER_DEATH, 0.5f, 1.5f);
