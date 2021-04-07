@@ -85,7 +85,6 @@ public class Game {
         refreshGame();
         state = GameState.PLAYING;
 
-
         updateLives();
 
         tasks.add(TaskUtil.timer(midSpawnSecs*20, midSpawnSecs*20, () -> {
@@ -243,12 +242,12 @@ public class Game {
 
         for (Player player : Bukkit.getServer().getOnlinePlayers()) {
             if (players.contains(player)) continue;
-            player.hidePlayer(p);
-            p.hidePlayer(player);
+            if (player.canSee(p)) player.hidePlayer(p);
+            if (p.canSee(player)) p.hidePlayer(player);
         }
         for (Player player : getPlayers()) {
-            player.showPlayer(p);
-            p.showPlayer(player);
+            if (!player.canSee(p)) player.showPlayer(p);
+            if (!p.canSee(player)) p.showPlayer(player);
         }
 
         if (!state.equals(GameState.STARTING) && getPlayers().size() >= playersNeededToStart) {
