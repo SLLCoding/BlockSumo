@@ -223,7 +223,7 @@ public class Game {
                 players.get(0).playSound(players.get(0).getLocation(), Sound.CLICK, 1f, 1f);
                 return;
             }
-            victory(players.get(0));
+            if (players.size() == 1) victory(players.get(0));
             return;
         }
     }
