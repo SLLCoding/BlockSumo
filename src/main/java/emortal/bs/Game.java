@@ -111,6 +111,28 @@ public class Game {
             if (!hasSkyBorder && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
                 skyBorderTarget = 250;
                 hasSkyBorder = true;
+                ParticleTypeMotion particle = particles.FLAME();
+                tasks.add(new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        for (Player player : players) {
+                            for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
+                                for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
+                                    particles.sendPacket(players, particle.packet(true, x, skyBorderHeight, z));
+                                    particles.sendPacket(dead, particle.packet(true, x, skyBorderHeight, z));
+                                }
+                            }
+                            if (player.getLocation().getY() + 1.75 >= skyBorderHeight) {
+                                if (player.getGameMode().equals(GameMode.SURVIVAL)) playerDied(player);
+                            }
+                        }
+                        if (Math.round(skyBorderHeight) > Math.round(skyBorderTarget)) {
+                            skyBorderHeight = skyBorderHeight - 0.01;
+                        } else if (Math.round(skyBorderHeight) < Math.round(skyBorderTarget)) {
+                            skyBorderHeight = skyBorderHeight + 0.01;
+                        }
+                    }
+                }.runTaskTimer(instance, 1, 1));
                 for (Player p1 : getPlayers()) {
                     p1.sendMessage(color("&cThe sky is falling in!"));
                 }
@@ -157,31 +179,6 @@ public class Game {
                 if (p1.getGameMode() == GameMode.SURVIVAL) p1.getInventory().addItem(itemToGive);
             }
         }));
-
-        ParticleTypeMotion particle = particles.FLAME();
-        tasks.add(new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (hasSkyBorder) {
-                    for (Player player : players) {
-                        for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
-                            for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
-                                particles.sendPacket(players, particle.packet(true, x, skyBorderHeight, z));
-                                particles.sendPacket(dead, particle.packet(true, x, skyBorderHeight, z));
-                            }
-                        }
-                        if (player.getLocation().getY() + 1.75 >= skyBorderHeight) {
-                            playerDied(player);
-                        }
-                    }
-                    if (Math.round(skyBorderHeight) > Math.round(skyBorderTarget)) {
-                        skyBorderHeight = skyBorderHeight - 0.01;
-                    } else if (Math.round(skyBorderHeight) < Math.round(skyBorderTarget)) {
-                        skyBorderHeight = skyBorderHeight + 0.01;
-                    }
-                }
-            }
-        }.runTaskTimer(instance, 1, 1));
 
         for (Player player : getPlayers()) {
             respawn(player);
