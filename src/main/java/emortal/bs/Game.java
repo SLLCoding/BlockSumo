@@ -215,7 +215,6 @@ public class Game {
         if (getPlayers().size() > 0) updateLives();
         if (getPlayers().size() <= 1) {
             if (!started && starting) {
-                log("Cancelled start!");
                 gameStartTask.cancel();
                 starting = false;
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
@@ -392,6 +391,7 @@ public class Game {
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
+        if (diamondBlockTask != null) diamondBlockTask.cancel();
 
         final List<PlayerStats> killList = new ArrayList<>(statMap.values());
 
@@ -403,7 +403,7 @@ public class Game {
         sb.append("&8&m" + Strings.repeat(" ", 50) + "&r\n");
         sb.append(Strings.repeat(" ", 20) + "%WINMSG%");
         sb.append("\n&r");
-        sb.append("            &7Winner: " + winner.getDisplayName());
+        sb.append(Strings.repeat(" ", 15) + "&7Winner: " + winner.getDisplayName());
         sb.append(" &r\n ");
         for (byte i = 0; i < Math.min(killList.size(), 3); i++) {
             sb.append("\n    " + (i == 0 ? ChatColor.GREEN + "1st" : i == 1 ? ChatColor.GOLD + "2nd" : ChatColor.RED + "3rd") + " &7- " + killList.get(i).player.getDisplayName() + " &7- " + killList.get(i).kills);

@@ -301,8 +301,10 @@ public class Main extends JavaPlugin implements Listener {
         final Player damager;
         if (e.getDamager() instanceof Projectile) {
             damager = (Player) ((Projectile) e.getDamager()).getShooter();
+        } else if (e.getDamager() instanceof Player) {
+            damager = (Player) e.getDamager();
         } else {
-            damager = (Player)e.getDamager();
+            return;
         }
 
         final PlayerStats damagerStats = g.statMap.get(damager);
