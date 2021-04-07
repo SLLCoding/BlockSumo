@@ -16,17 +16,13 @@ public class TitleAPI {
     }
 
     public static void title(Player p, String title, String subtitle, int in, int stay, int out) {
-        if (!Strings.isNullOrEmpty(title)) {
-            final IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + color(title) + "\"}");
-            final PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(titlePacket);
-        }
-        if (!Strings.isNullOrEmpty(subtitle)) {
-            final IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + color(subtitle) + "\"}");
-            final PacketPlayOutTitle subtitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleComponent);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitlePacket);
-        }
+        final IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + color(title) + "\"}");
+        final IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + color(subtitle) + "\"}");
+        final PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent);
+        final PacketPlayOutTitle subtitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleComponent);
         final PacketPlayOutTitle length = new PacketPlayOutTitle(in, stay, out);
+        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(titlePacket);
+        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitlePacket);
         ((CraftPlayer) p).getHandle().playerConnection.sendPacket(length);
     }
 }
