@@ -145,6 +145,31 @@ public class Game {
         }
     }
 
+    public void stop() {
+        if (state.equals(GameState.ENDING)) return;
+        state = GameState.ENDING;
+
+        tasks.forEach(BukkitTask::cancel);
+        tasks.clear();
+        if (diamondBlockTask != null) diamondBlockTask.cancel();
+
+        statMap.clear();
+
+        for (Player player : getPlayers()) {
+            title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
+
+            gameMap.remove(player);
+            player.setGameMode(GameMode.SPECTATOR);
+        }
+
+        TaskUtil.later(5 * 20, () -> {
+            gamePositions.remove(pos);
+            for (Player player : getPlayers()) {
+                nextGame.addPlayer(player);
+            }
+        });
+    }
+
     public void addPlayer(Player p) {
         p.getInventory().clear();
         p.teleport(midLoc);

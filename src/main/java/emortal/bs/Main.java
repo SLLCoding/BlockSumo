@@ -8,9 +8,8 @@ import com.github.fierioziy.particlenativeapi.core.ParticleNativeCore;
 import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
-import net.minecraft.server.v1_8_R3.GameRules;
+import emortal.bs.commands.CommandManager;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -81,6 +80,12 @@ public class Main extends JavaPlugin implements Listener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        try {
+            CommandManager.setup();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
         }
 
         refreshGame();
