@@ -17,6 +17,7 @@ dependencies {
     compile 'fr.minuskube:netherboard-bukkit:1.2.1'
     implementation fileTree('libs')
     compile 'com.github.fierioziy.particlenativeapi:ParticleNativeAPI-core:3.0.0'
+    compile 'org.reflections:reflections:0.9.12'
 }
 
 test {

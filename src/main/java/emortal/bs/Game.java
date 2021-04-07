@@ -5,6 +5,7 @@ import com.github.fierioziy.particlenativeapi.api.types.ParticleTypeMotion;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import emortal.bs.Util.GamePosition;
+import emortal.bs.Util.GameState;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
 import org.bukkit.*;
@@ -49,10 +50,9 @@ public class Game {
     private final World w;
     public final Location midLoc;
 
-    public boolean started = false;
-    private boolean starting = false;
     private boolean hasRainedTNT = false;
-    private boolean victorying = false;
+
+    private GameState state = GameState.WAITING;
 
     private long startTime;
     public double skyBorderTarget = 250;
@@ -83,7 +83,7 @@ public class Game {
 
     public void start() {
         refreshGame();
-        started = true;
+        state = GameState.PLAYING;
 
 
         updateLives();
@@ -193,6 +193,31 @@ public class Game {
         }
     }
 
+    public void stop() {
+        if (state.equals(GameState.ENDING)) return;
+        state = GameState.ENDING;
+
+        tasks.forEach(BukkitTask::cancel);
+        tasks.clear();
+        if (diamondBlockTask != null) diamondBlockTask.cancel();
+
+        statMap.clear();
+
+        for (Player player : getPlayers()) {
+            title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
+
+            gameMap.remove(player);
+            player.setGameMode(GameMode.SPECTATOR);
+        }
+
+        TaskUtil.later(5 * 20, () -> {
+            gamePositions.remove(pos);
+            for (Player player : getPlayers()) {
+                nextGame.addPlayer(player);
+            }
+        });
+    }
+
     public void addPlayer(Player p) {
         p.getInventory().clear();
         p.teleport(midLoc);
@@ -226,8 +251,8 @@ public class Game {
             p.showPlayer(player);
         }
 
-        if (!starting && getPlayers().size() >= playersNeededToStart) {
-            starting = true;
+        if (!state.equals(GameState.STARTING) && getPlayers().size() >= playersNeededToStart) {
+            state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = gameStartSecs;
                 @Override
@@ -263,16 +288,20 @@ public class Game {
         gameMap.remove(p);
 
         if (getPlayers().size() > 0) updateLives();
-        if (getPlayers().size() <= 1) {
-            if (!started && starting) {
+        if (getPlayers().size() == 1) {
+            if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
-                starting = false;
+                state = GameState.WAITING;
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
                 players.get(0).playSound(players.get(0).getLocation(), Sound.CLICK, 1f, 1f);
                 return;
             }
-            if (players.size() == 1) victory(players.get(0));
-            return;
+            victory(players.get(0));
+        } else if (getPlayers().size() < 1) {
+            if (state.equals(GameState.STARTING)) {
+                gameStartTask.cancel();
+                state = GameState.WAITING;
+            }
         }
     }
 
@@ -298,7 +327,7 @@ public class Game {
     }
 
     public void playerDied(Player playerWhoDied) {
-        if (victorying) return;
+        if (state.equals(GameState.ENDING)) return;
 
         playerWhoDied.closeInventory();
         playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.VILLAGER_DEATH, 0.5f, 1.5f);
@@ -382,7 +411,7 @@ public class Game {
     }
 
     public void respawn(Player playerWhoDied) {
-        if (victorying) return;
+        if (state.equals(GameState.ENDING)) return;
         playerWhoDied.setLevel(0);
 
         final PlayerStats stats = statMap.get(playerWhoDied);
@@ -436,8 +465,8 @@ public class Game {
     }
 
     public void victory(Player winner) {
-        if (victorying) return;
-        victorying = true;
+        if (state.equals(GameState.ENDING)) return;
+        state = GameState.ENDING;
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
@@ -506,6 +535,10 @@ public class Game {
                 t.addEntry(value1.player.getName());
             }
         }
+    }
+
+    public GameState getState() {
+        return state;
     }
 
 }
