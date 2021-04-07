@@ -52,11 +52,13 @@ public class Game {
     private boolean hasRainedTNT = false;
     private boolean victorying = false;
 
+    private final GamePosition pos;
     public BukkitTask gameStartTask = null;
     public BukkitTask diamondBlockTask = null;
     public Player diamondBlockPlayer = null;
 
     public Game(World w, GamePosition pos) {
+        this.pos = pos;
         this.w = w;
         this.midLoc = new Location(w, pos.x + 0.5, 231, pos.y + 0.5);
 
@@ -422,6 +424,7 @@ public class Game {
         }
 
         TaskUtil.later(5 * 20, () -> {
+            gamePositions.remove(pos);
             for (Player player : getPlayers()) {
                 nextGame.addPlayer(player);
             }
