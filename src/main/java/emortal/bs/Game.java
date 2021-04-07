@@ -170,7 +170,7 @@ public class Game {
                     }
                 }
 
-                for (Player player : getPlayers()) {
+                for (Player player : players) {
                     for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
                         for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
                             particles.sendPacket(getPlayers(), particle.packet(true, x, skyBorderHeight, z));
