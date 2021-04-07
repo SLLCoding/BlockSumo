@@ -273,6 +273,10 @@ public class Main extends JavaPlugin implements Listener {
         final Game g = gameMap.get(e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
+        if (stats.spawnProtectionTask != null) {
+            e.setCancelled(true);
+        }
+
         if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
             if (stats.spawnProtectionTask != null) {
                 e.setCancelled(true);
