@@ -55,6 +55,8 @@ public class Game {
     private boolean victorying = false;
 
     private long startTime;
+    public double skyBorderTarget = 250;
+    public double skyBorderHeight = 260;
 
     private final GamePosition pos;
     public BukkitTask gameStartTask = null;
@@ -149,9 +151,6 @@ public class Game {
         startTime = System.currentTimeMillis();
         ParticleTypeMotion particle = particles.FLAME();
         tasks.add(new BukkitRunnable() {
-            double skyBorderTarget = 250;
-            double skyBorderHeight = 260;
-
             @Override
             public void run() {
                 if (skyBorderHeight == 260) for (Player p1 : getPlayers()) {
