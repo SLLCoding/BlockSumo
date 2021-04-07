@@ -8,6 +8,7 @@ import com.github.fierioziy.particlenativeapi.core.ParticleNativeCore;
 import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
+import net.minecraft.server.v1_8_R3.GameRules;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -114,7 +115,7 @@ public class Main extends JavaPlugin implements Listener {
 
     @EventHandler
     public void playerQuit(final PlayerQuitEvent e) {
-        e.setQuitMessage(color(e.getPlayer().getDisplayName() + " &7 left"));
+        e.setQuitMessage(color(e.getPlayer().getDisplayName() + "&7 left"));
 
         final Game g = gameMap.get(e.getPlayer());
         if (g == null) return;

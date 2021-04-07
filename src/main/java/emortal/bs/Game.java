@@ -222,7 +222,7 @@ public class Game {
         updateLives();
 
         if (getPlayers().size() <= 1) {
-            if (!started) {
+            if (!started && starting) {
                 gameStartTask.cancel();
                 players.get(0).sendMessage(color("&cStart cancelled! Not enough players."));
                 players.get(0).playSound(players.get(0).getLocation(), Sound.CLICK, 1f, 1f);
