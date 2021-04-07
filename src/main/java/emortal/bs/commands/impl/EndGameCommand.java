@@ -15,7 +15,7 @@ public class EndGameCommand extends Command {
     public boolean execute(CommandSender commandSender, String s, String[] strings) {
         if (commandSender.getName().equalsIgnoreCase("SuperLegoLuis") || commandSender.getName().equalsIgnoreCase("emortl")) {
             Game game = Main.gameMap.get(commandSender);
-            game.stop();
+            if (game != null) game.stop();
         }
         return true;
     }

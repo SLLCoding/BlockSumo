@@ -15,6 +15,7 @@ public class SetLivesCommand extends Command {
     public boolean execute(CommandSender commandSender, String s, String[] strings) {
         if (commandSender.getName().equalsIgnoreCase("SuperLegoLuis") || commandSender.getName().equalsIgnoreCase("emortl")) {
             Game game = Main.gameMap.get(commandSender);
+            if (game == null) return true;
             game.statMap.get(commandSender).lives = (byte) Integer.parseInt(strings[0]);
             game.updateLives();
         }
