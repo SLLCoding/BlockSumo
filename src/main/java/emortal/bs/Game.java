@@ -215,7 +215,7 @@ public class Game {
         gameMap.remove(p);
 
         if (getPlayers().size() > 0) updateLives();
-        if (getPlayers().size() <= 1) {
+        if (getPlayers().size() == 1) {
             if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
                 state = GameState.WAITING;
@@ -224,6 +224,11 @@ public class Game {
                 return;
             }
             victory(players.get(0));
+        } else if (getPlayers().size() < 1) {
+            if (state.equals(GameState.STARTING)) {
+                gameStartTask.cancel();
+                state = GameState.WAITING;
+            }
         }
     }
 
