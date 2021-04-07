@@ -485,4 +485,9 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler
+    public void onHungerChange(FoodLevelChangeEvent event) {
+        event.setFoodLevel(20);
+    }
+
 }
