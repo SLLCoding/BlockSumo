@@ -219,7 +219,7 @@ public class Game {
         for (Player player : getPlayers()) {
             title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
 
-            GameManager.getPlayerToGame().remove(player, this);
+            GameManager.getPlayerToGame().remove(player.getUniqueId(), this);
             player.setGameMode(GameMode.SPECTATOR);
         }
 
@@ -240,7 +240,7 @@ public class Game {
         if (!(state.equals(GameState.PLAYING) || state.equals(GameState.ENDING))) players.add(p);
         else dead.add(p);
         gamers.add(p);
-        GameManager.getPlayerToGame().put(p, this);
+        GameManager.getPlayerToGame().put(p.getUniqueId(), this);
 
         TeamColor teamColor = TeamColor.values()[r.nextInt(TeamColor.values().length)];
 
@@ -309,7 +309,7 @@ public class Game {
         dead.remove(p);
         gamers.remove(p);
         statMap.remove(p);
-        GameManager.getPlayerToGame().remove(p, this);
+        GameManager.getPlayerToGame().remove(p.getUniqueId(), this);
 
         if (getPlayers().size() > 0) updateLives();
         if (getPlayers().size() == 1) {
@@ -519,7 +519,7 @@ public class Game {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
             title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
-            GameManager.getPlayerToGame().remove(player);
+            GameManager.getPlayerToGame().remove(player.getUniqueId());
             player.sendMessage(color(s.replace("%WINMSG%", winMsg)));
             player.setGameMode(GameMode.SPECTATOR);
         }

@@ -5,15 +5,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GameManager {
 
     private static final List<Game> games = new ArrayList<>();
-    private static final Map<Player, Game> playerToGame = new HashMap<>();
+    private static final Map<UUID, Game> playerToGame = new HashMap<>();
     private static final List<GamePosition> gamePositions = new ArrayList<>();
 
     /**
@@ -25,7 +22,7 @@ public class GameManager {
         for (Game game : games) {
             if (!game.getOptions().isPrivate() && game.getGamers().size() < game.getOptions().getMaxPlayers()) {
                 game.addPlayer(player);
-                playerToGame.put(player, game);
+                playerToGame.put(player.getUniqueId(), game);
                 return game;
             }
         }
@@ -44,13 +41,13 @@ public class GameManager {
     }
 
     public static void removePlayer(Player player) {
-        Game game = playerToGame.get(player);
+        Game game = playerToGame.get(player.getUniqueId());
         if (game == null) return;
         game.removePlayer(player);
     }
 
     public static Game getGame(Player player) {
-        return playerToGame.get(player);
+        return playerToGame.get(player.getUniqueId());
     }
 
     public static void shutdown() {
@@ -67,7 +64,7 @@ public class GameManager {
         return gamePositions;
     }
 
-    public static Map<Player, Game> getPlayerToGame() {
+    public static Map<UUID, Game> getPlayerToGame() {
         return playerToGame;
     }
 
