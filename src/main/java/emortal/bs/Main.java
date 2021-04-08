@@ -261,7 +261,7 @@ public class Main extends JavaPlugin implements Listener {
         e.setDamage(0);
 
         final Game g = GameManager.getGame((Player) e.getEntity());
-        final PlayerStats stats = g.statMap.get(e.getEntity());
+        final PlayerStats stats = g.statMap.get(e.getEntity().getUniqueId());
 
         if (stats.spawnProtectionTask != null) {
             e.setCancelled(true);
@@ -284,7 +284,7 @@ public class Main extends JavaPlugin implements Listener {
         if (e.getEntity().getType() != EntityType.PLAYER) return;
 
         final Game g = GameManager.getGame((Player) e.getEntity());
-        final PlayerStats stats = g.statMap.get(e.getEntity());
+        final PlayerStats stats = g.statMap.get(e.getEntity().getUniqueId());
 
         final Player damager;
         if (e.getDamager() instanceof Projectile) {
@@ -295,7 +295,7 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        final PlayerStats damagerStats = g.statMap.get(damager);
+        final PlayerStats damagerStats = g.statMap.get(damager.getUniqueId());
         if (damagerStats.spawnProtectionTask != null) damagerStats.removeSpawnProtection(r);
 
         stats.setLastHitBy(damager);
@@ -330,7 +330,7 @@ public class Main extends JavaPlugin implements Listener {
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = GameManager.getGame((Player) nearbyEntity);
-            final PlayerStats stats = g.statMap.get(nearbyEntity);
+            final PlayerStats stats = g.statMap.get(nearbyEntity.getUniqueId());
             if (stats.spawnProtectionTask != null) continue;
 
             final double xPos = nearbyEntity.getLocation().getX() - loc.getX();
@@ -354,7 +354,7 @@ public class Main extends JavaPlugin implements Listener {
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = GameManager.getGame((Player) nearbyEntity);
-            final PlayerStats stats = g.statMap.get(nearbyEntity);
+            final PlayerStats stats = g.statMap.get(nearbyEntity.getUniqueId());
             if (stats.spawnProtectionTask != null) continue;
 
             final double xPos = nearbyEntity.getLocation().getX() - loc.getX();
@@ -377,7 +377,7 @@ public class Main extends JavaPlugin implements Listener {
         final Player p = e.getPlayer();
         final Game g = GameManager.getGame(p);
         if (g == null) return;
-        final PlayerStats stats = g.statMap.get(p);
+        final PlayerStats stats = g.statMap.get(p.getUniqueId());
 
         switch (e.getItem().getType()) {
             case FIREBALL:
