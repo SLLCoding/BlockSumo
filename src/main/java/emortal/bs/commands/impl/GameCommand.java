@@ -45,7 +45,13 @@ public class GameCommand extends Command {
                         }
                     }.runTaskTimer(instance, 0, 20));
                 }
-            }
+            }/* else if (args[0].equalsIgnoreCase("private")) {
+                Player player = (Player) sender;
+                GameManager.removePlayer(player);
+                player.teleport(new Location(player.getWorld(), 0, 64, 0));
+
+                player.sendMessage("You would be configuring a custom game right now but I haven't made that yet so you can just rejoin to get back into a public game.");
+            }*/
         }
         return true;
     }
