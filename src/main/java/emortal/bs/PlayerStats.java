@@ -24,6 +24,7 @@ public class PlayerStats {
     public final Player player;
     public final BPlayerBoard board;
     public BukkitTask spawnProtectionTask = null;
+    public BukkitTask respawnTask = null;
 
     public PlayerStats(Player p, TeamColor teamColor) {
         this.player = p;

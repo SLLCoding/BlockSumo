@@ -308,6 +308,11 @@ public class Game {
         players.remove(p);
         dead.remove(p);
         gamers.remove(p);
+
+        PlayerStats stats = statMap.get(p.getUniqueId());
+        if (stats.spawnProtectionTask != null) stats.spawnProtectionTask.cancel();
+        if (stats.respawnTask != null) stats.respawnTask.cancel();
+
         statMap.remove(p.getUniqueId());
         GameManager.getPlayerToGame().remove(p.getUniqueId(), this);
 
@@ -413,7 +418,7 @@ public class Game {
             return;
         }
 
-        tasks.add(new BukkitRunnable() {
+        tasks.add(stats.respawnTask = new BukkitRunnable() {
             int i = options.getRespawnTime() - 1;
 
             @Override
