@@ -1,4 +1,4 @@
-package emortal.bs.Util;
+package emortal.bs.games;
 
 public enum GameState {
 
