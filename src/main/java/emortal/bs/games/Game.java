@@ -38,7 +38,7 @@ public class Game {
     private final List<Player> dead = new ArrayList<>();
     private final List<Player> gamers = new ArrayList<>();
 
-    public final HashMap<Player, PlayerStats> statMap = new HashMap<>();
+    public final HashMap<UUID, PlayerStats> statMap = new HashMap<>();
     public final List<BukkitTask> tasks = new ArrayList<>();
 
     private final Random r = new Random();
@@ -251,7 +251,7 @@ public class Game {
         PlayerStats playerStats = new PlayerStats(p, teamColor);
         if (dead.contains(p)) playerStats.lives = (byte) 0;
         else if (players.contains(p)) playerStats.lives = (byte) options.getStartingLives();
-        statMap.put(p, playerStats);
+        statMap.put(p.getUniqueId(), playerStats);
         p.setDisplayName(teamColor.chatColor + "" + p.getName());
 
         final ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
@@ -308,7 +308,7 @@ public class Game {
         players.remove(p);
         dead.remove(p);
         gamers.remove(p);
-        statMap.remove(p);
+        statMap.remove(p.getUniqueId());
         GameManager.getPlayerToGame().remove(p.getUniqueId(), this);
 
         if (getPlayers().size() > 0) updateLives();
@@ -358,7 +358,7 @@ public class Game {
         playerWhoDied.setGameMode(GameMode.SPECTATOR);
         playerWhoDied.getInventory().clear();
 
-        final PlayerStats stats = statMap.get(playerWhoDied);
+        final PlayerStats stats = statMap.get(playerWhoDied.getUniqueId());
         if (stats.spawnProtectionTask != null) {
             stats.spawnProtectionTask.cancel();
             stats.spawnProtectionTask = null;
@@ -377,7 +377,7 @@ public class Game {
                 lastHitBy.playSound(lastHitBy.getLocation(), Sound.NOTE_PLING, 1, 1);
                 lastHitBy.sendMessage(color("&7You killed " + playerWhoDied.getDisplayName() + "&7! " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
 
-                statMap.get(lastHitBy).kills++;
+                statMap.get(lastHitBy.getUniqueId()).kills++;
 
                 for (Player p : getPlayers()) {
                     if (p == lastHitBy) continue;
@@ -438,7 +438,7 @@ public class Game {
         if (state.equals(GameState.ENDING)) return;
         playerWhoDied.setLevel(0);
 
-        final PlayerStats stats = statMap.get(playerWhoDied);
+        final PlayerStats stats = statMap.get(playerWhoDied.getUniqueId());
 
         for (PotionEffect potion : playerWhoDied.getActivePotionEffects()) {
             playerWhoDied.removePotionEffect(potion.getType());
