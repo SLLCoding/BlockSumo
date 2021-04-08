@@ -18,17 +18,37 @@ public class AdminCommand extends Command {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender.getName().equalsIgnoreCase("SuperLegoLuis") || sender.getName().equalsIgnoreCase("emortl"))) return true;
         if (args.length > 0) {
-            if (args[0].equalsIgnoreCase("end")) {
-                // TODO: Allow user to specify player or game ID.
-                Game game = GameManager.getGame((Player) sender);
-                if (game != null) game.stop();
-            } else if (args[0].equalsIgnoreCase("start")) {
-                // TODO: Allow user to specify player or game ID.
-                Game game = GameManager.getGame((Player) sender);
-                if (game == null || !(game.getState().equals(GameState.WAITING) || game.getState().equals(GameState.STARTING))) return true;
-                if (game.gameStartTask != null) game.gameStartTask.cancel();
-                game.start();
-            } else if (args[0].equalsIgnoreCase("lives")) {
+            if (args[0].equalsIgnoreCase("game")) {
+                if (args.length > 1) {
+                    int gameId = Integer.parseInt(args[1]);
+                    Game game = null;
+                    for (Game g : GameManager.getGames()) {
+                        if (g.getId() == gameId) {
+                            game = g;
+                            break;
+                        }
+                    } if (game == null) {
+                        sender.sendMessage("Unknown game: " + args[1]);
+                        return true;
+                    }
+                    if (args.length > 2) {
+                        if (args[2].equalsIgnoreCase("start")) {
+                            if (!(game.getState().equals(GameState.WAITING) || game.getState().equals(GameState.STARTING))) return true;
+                            if (game.gameStartTask != null) game.gameStartTask.cancel();
+                            game.start();
+                        } else if (args[2].equalsIgnoreCase("end")) {
+                            game.stop();
+                        } else if (args[2].equalsIgnoreCase("info")) {
+                            sender.sendMessage(game.getId() + " - " + game.getState());
+                            sender.sendMessage("Players:");
+                            for (Player player : game.getGamers()) {
+                                sender.sendMessage(" - " + player.getName());
+                            }
+                        }
+                    }
+                }
+            }
+            if (args[0].equalsIgnoreCase("lives")) {
                 if (args.length > 1) {
                     if (args[1].equalsIgnoreCase("set")) {
                         Player player;
@@ -66,6 +86,10 @@ public class AdminCommand extends Command {
                         game.statMap.get(player).lives = (byte) game.getOptions().getStartingLives();
                         game.updateLives();
                     }
+                }
+            } else if (args[0].equalsIgnoreCase("games")) {
+                for (Game game : GameManager.getGames()) {
+                    sender.sendMessage(game.getId() + " - " + game.getState());
                 }
             }
         }

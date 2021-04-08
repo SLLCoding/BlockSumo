@@ -59,8 +59,22 @@ public class Game {
     public Player diamondBlockPlayer = null;
 
     private final GameOptions options;
+    private final int id;
 
     public Game(World w, GamePosition pos, GameOptions options) {
+        int supposedId = r.nextInt(1000);
+        boolean exists = GameManager.getGames().size() != 0;
+        while (exists) {
+            for (Game game : GameManager.getGames()) {
+                if (game.equals(this)) continue;
+                if (game.getId() == supposedId) supposedId = r.nextInt(1000);
+                else {
+                    exists = false;
+                    break;
+                }
+            }
+        }
+        id = supposedId;
         this.pos = pos;
         this.w = w;
         this.midLoc = new Location(w, pos.x + 0.5, 231, pos.y + 0.5);
@@ -558,6 +572,10 @@ public class Game {
 
     public GameOptions getOptions() {
         return options;
+    }
+
+    public int getId() {
+        return id;
     }
 
 }
