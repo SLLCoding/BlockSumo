@@ -71,7 +71,7 @@ public class AdminCommand extends Command {
                         }
                         Game game = GameManager.getGame(player);
                         if (game == null) return true;
-                        game.statMap.get(player).lives = (byte) lives;
+                        game.statMap.get(player.getUniqueId()).lives = (byte) lives;
                         game.updateLives();
                     } else if (args[1].equalsIgnoreCase("reset")) {
                         Player player;
@@ -83,7 +83,7 @@ public class AdminCommand extends Command {
                         }
                         Game game = GameManager.getGame(player);
                         if (game == null) return true;
-                        game.statMap.get(player).lives = (byte) game.getOptions().getStartingLives();
+                        game.statMap.get(player.getUniqueId()).lives = (byte) game.getOptions().getStartingLives();
                         game.updateLives();
                     }
                 }
