@@ -1,7 +1,7 @@
 package emortal.bs.commands.impl;
 
-import emortal.bs.Game;
-import emortal.bs.Main;
+import emortal.bs.games.Game;
+import emortal.bs.games.GameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,7 +34,7 @@ public class SetLivesCommand extends Command {
                     return true;
                 }
             }
-            Game game = Main.gameMap.get(player);
+            Game game = GameManager.getGame(player);
             if (game == null) return true;
             game.statMap.get(player).lives = (byte) lives;
             game.updateLives();

@@ -1,11 +1,12 @@
-package emortal.bs;
+package emortal.bs.games;
 
 import com.boydti.fawe.object.schematic.Schematic;
 import com.github.fierioziy.particlenativeapi.api.types.ParticleTypeMotion;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
+import emortal.bs.PlayerStats;
+import emortal.bs.TeamColor;
 import emortal.bs.Util.GamePosition;
-import emortal.bs.Util.GameState;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
 import org.bukkit.*;
@@ -42,6 +43,7 @@ public class Game {
 
     private final List<Player> players = new ArrayList<>();
     private final List<Player> dead = new ArrayList<>();
+    private final List<Player> gamers = new ArrayList<>();
 
     public final HashMap<Player, PlayerStats> statMap = new HashMap<>();
     public final List<BukkitTask> tasks = new ArrayList<>();
@@ -82,7 +84,6 @@ public class Game {
     }
 
     public void start() {
-        refreshGame();
         state = GameState.PLAYING;
 
         updateLives();
@@ -205,14 +206,15 @@ public class Game {
         for (Player player : getPlayers()) {
             title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
 
-            gameMap.remove(player);
+            GameManager.getPlayerToGame().remove(player, this);
             player.setGameMode(GameMode.SPECTATOR);
         }
 
         TaskUtil.later(5 * 20, () -> {
-            gamePositions.remove(pos);
+            GameManager.getGames().remove(this);
+            GameManager.getGamePositions().remove(pos);
             for (Player player : getPlayers()) {
-                nextGame.addPlayer(player);
+                GameManager.addPlayer(player);
             }
         });
     }
@@ -222,15 +224,19 @@ public class Game {
         p.teleport(midLoc);
         p.setGameMode(GameMode.SPECTATOR);
 
-        players.add(p);
-        gameMap.put(p, this);
+        if (!(state.equals(GameState.PLAYING) || state.equals(GameState.ENDING))) players.add(p);
+        else dead.add(p);
+        gamers.add(p);
+        GameManager.getPlayerToGame().put(p, this);
 
         TeamColor teamColor = TeamColor.values()[r.nextInt(TeamColor.values().length)];
 
         if (p.getName().equalsIgnoreCase("emortl")) teamColor = TeamColor.PURPLE;
         else if (p.getName().equalsIgnoreCase("iternalplayer")) teamColor = TeamColor.RED;
 
-        statMap.put(p, new PlayerStats(p, teamColor));
+        PlayerStats playerStats = new PlayerStats(p, teamColor);
+        if (dead.contains(p)) playerStats.lives = (byte) 0;
+        statMap.put(p, playerStats);
         p.setDisplayName(teamColor.chatColor + "" + p.getName());
 
         final ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
@@ -250,7 +256,11 @@ public class Game {
             if (!p.canSee(player)) p.showPlayer(player);
         }
 
-        if (!state.equals(GameState.STARTING) && getPlayers().size() >= playersNeededToStart) {
+        for (Player player : gamers) {
+            player.sendMessage(color("&8(&a" + gamers.size() + "&8/&a" + Game.maxPlayers + "&8) " + p.getDisplayName() + "&7 joined"));
+        }
+
+        if (state.equals(GameState.WAITING) && getPlayers().size() >= playersNeededToStart) {
             state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = gameStartSecs;
@@ -275,7 +285,6 @@ public class Game {
             }.runTaskTimer(instance, 0, 20));
         }
         if (getPlayers().size() == maxPlayers) {
-            refreshGame();
             gameStartTask.cancel();
             start();
         }
@@ -283,8 +292,9 @@ public class Game {
     public void removePlayer(Player p) {
         players.remove(p);
         dead.remove(p);
+        gamers.remove(p);
         statMap.remove(p);
-        gameMap.remove(p);
+        GameManager.getPlayerToGame().remove(p, this);
 
         if (getPlayers().size() > 0) updateLives();
         if (getPlayers().size() == 1) {
@@ -494,15 +504,16 @@ public class Game {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
             title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
-            gameMap.remove(player);
+            GameManager.getPlayerToGame().remove(player);
             player.sendMessage(color(s.replace("%WINMSG%", winMsg)));
             player.setGameMode(GameMode.SPECTATOR);
         }
 
         TaskUtil.later(5 * 20, () -> {
-            gamePositions.remove(pos);
+            GameManager.getGames().remove(this);
+            GameManager.getGamePositions().remove(pos);
             for (Player player : getPlayers()) {
-                nextGame.addPlayer(player);
+                GameManager.addPlayer(player);
             }
         });
     }
@@ -538,6 +549,10 @@ public class Game {
 
     public GameState getState() {
         return state;
+    }
+
+    public List<Player> getGamers() {
+        return gamers;
     }
 
 }

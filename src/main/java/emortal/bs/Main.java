@@ -5,10 +5,11 @@ import com.boydti.fawe.object.schematic.Schematic;
 import com.github.fierioziy.particlenativeapi.api.ParticleNativeAPI;
 import com.github.fierioziy.particlenativeapi.api.Particles_1_8;
 import com.github.fierioziy.particlenativeapi.core.ParticleNativeCore;
-import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
 import emortal.bs.commands.CommandManager;
+import emortal.bs.games.Game;
+import emortal.bs.games.GameManager;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
@@ -47,15 +48,13 @@ public class Main extends JavaPlugin implements Listener {
     };
 
     public static final Random r = new Random();
-    public static final List<GamePosition> gamePositions = new ArrayList<>();
-    public static final HashMap<Player, Game> gameMap = new HashMap<>();
+
     public static final HashMap<Entity, Player> entityMap = new HashMap<>();
 
     public static final List<Schematic> maps = new ArrayList<>();
 
     public static ParticleNativeAPI particleAPI;
     public static Particles_1_8 particles;
-    public static Game nextGame;
     public static Main instance;
 
     public static void log(String s) {
@@ -87,45 +86,29 @@ public class Main extends JavaPlugin implements Listener {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-
-        refreshGame();
     }
 
     @Override
     public void onDisable() {
-        gamePositions.clear();
-        gameMap.clear();
-    }
-
-    public static void refreshGame() {
-        for (int x = -10; x < 10; x++)
-            for (int y = -10; y < 10; y++) {
-                final GamePosition pos = new GamePosition(x,y);
-                if (gamePositions.contains(pos)) continue;
-                final World w = Bukkit.getWorld("sumo");
-                nextGame = new Game(w, pos);
-                gamePositions.add(pos);
-                return;
-            }
+        GameManager.shutdown();
     }
 
     @EventHandler
     public void playerJoin(final PlayerJoinEvent e) {
         final Player p = e.getPlayer();
 
-        nextGame.addPlayer(p);
+        Game game = GameManager.addPlayer(p);
 
-        e.setJoinMessage(color("&8(&a" + nextGame.getPlayers().size() + "&8/&a" + Game.maxPlayers + "&8) " + p.getDisplayName() + "&7 joined"));
+        if (game == null) p.kickPlayer("Couldn't find a game, please try again later.");
+
+        e.setJoinMessage(null);
     }
 
     @EventHandler
     public void playerQuit(final PlayerQuitEvent e) {
         e.setQuitMessage(color(e.getPlayer().getDisplayName() + "&7 left"));
 
-        final Game g = gameMap.get(e.getPlayer());
-        if (g == null) return;
-
-        g.removePlayer(e.getPlayer());
+        GameManager.removePlayer(e.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -161,7 +144,7 @@ public class Main extends JavaPlugin implements Listener {
         // END OF VIAVERISON FIX
 
 
-        final Game g = gameMap.get(e.getPlayer());
+        final Game g = GameManager.getGame(e.getPlayer());
         final Location loc = e.getBlockPlaced().getLocation().subtract(g.midLoc.getBlockX(), 0, g.midLoc.getBlockZ());
 
         if (e.getBlockAgainst().getType() == Material.BARRIER) {
@@ -199,7 +182,7 @@ public class Main extends JavaPlugin implements Listener {
 
         if (p.getGameMode() != GameMode.SURVIVAL) return;
 
-        final Game g = gameMap.get(p);
+        final Game g = GameManager.getGame(p);
         if (p.getLocation().getBlockY() < 215) {
             g.playerDied(p);
             return;
@@ -277,7 +260,7 @@ public class Main extends JavaPlugin implements Listener {
 
         e.setDamage(0);
 
-        final Game g = gameMap.get(e.getEntity());
+        final Game g = GameManager.getGame((Player) e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
         if (stats.spawnProtectionTask != null) {
@@ -300,7 +283,7 @@ public class Main extends JavaPlugin implements Listener {
     public void playerDamageByPlayer(final EntityDamageByEntityEvent e) {
         if (e.getEntity().getType() != EntityType.PLAYER) return;
 
-        final Game g = gameMap.get(e.getEntity());
+        final Game g = GameManager.getGame((Player) e.getEntity());
         final PlayerStats stats = g.statMap.get(e.getEntity());
 
         final Player damager;
@@ -346,7 +329,7 @@ public class Main extends JavaPlugin implements Listener {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
-            final Game g = gameMap.get(nearbyEntity);
+            final Game g = GameManager.getGame((Player) nearbyEntity);
             final PlayerStats stats = g.statMap.get(nearbyEntity);
             if (stats.spawnProtectionTask != null) continue;
 
@@ -370,7 +353,7 @@ public class Main extends JavaPlugin implements Listener {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
-            final Game g = gameMap.get(nearbyEntity);
+            final Game g = GameManager.getGame((Player) nearbyEntity);
             final PlayerStats stats = g.statMap.get(nearbyEntity);
             if (stats.spawnProtectionTask != null) continue;
 
@@ -392,7 +375,7 @@ public class Main extends JavaPlugin implements Listener {
         if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         final Player p = e.getPlayer();
-        final Game g = gameMap.get(p);
+        final Game g = GameManager.getGame(p);
         if (g == null) return;
         final PlayerStats stats = g.statMap.get(p);
 
