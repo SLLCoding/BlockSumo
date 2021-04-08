@@ -232,6 +232,7 @@ public class Game {
 
         if (p.getName().equalsIgnoreCase("emortl")) teamColor = TeamColor.PURPLE;
         else if (p.getName().equalsIgnoreCase("iternalplayer")) teamColor = TeamColor.RED;
+        else if (p.getName().equalsIgnoreCase("superlegoluis")) teamColor = TeamColor.ORANGE;
 
         PlayerStats playerStats = new PlayerStats(p, teamColor);
         if (dead.contains(p)) playerStats.lives = (byte) 0;
