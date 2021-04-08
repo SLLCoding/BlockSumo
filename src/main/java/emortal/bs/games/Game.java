@@ -33,13 +33,6 @@ public class Game {
 
     public static final int playersNeededToStart = 2;
     public static final int gameWidth = 15;
-    public static final int maxPlayers = 12;
-
-    public static final int tntRainSecs = 8;
-    public static final int respawnSecs = 5;
-    public static final int gameStartSecs = 10;
-    public static final int midSpawnSecs = 40;
-    public static final int everywhereSpawnSecs = midSpawnSecs / 2;
 
     private final List<Player> players = new ArrayList<>();
     private final List<Player> dead = new ArrayList<>();
@@ -65,10 +58,14 @@ public class Game {
     public BukkitTask diamondBlockTask = null;
     public Player diamondBlockPlayer = null;
 
-    public Game(World w, GamePosition pos) {
+    private final GameOptions options;
+
+    public Game(World w, GamePosition pos, GameOptions options) {
         this.pos = pos;
         this.w = w;
         this.midLoc = new Location(w, pos.x + 0.5, 231, pos.y + 0.5);
+        if (options != null) this.options = options;
+        else this.options = new GameOptions();
 
         final Schematic map = maps.get(r.nextInt(maps.size()));
         final com.sk89q.worldedit.world.World worldeditWorld = BukkitUtil.getLocalWorld(w);
@@ -88,7 +85,7 @@ public class Game {
 
         updateLives();
 
-        tasks.add(TaskUtil.timer(midSpawnSecs*20, midSpawnSecs*20, () -> {
+        tasks.add(TaskUtil.timer(options.getMidSpawnTimer() * 20L, options.getMidSpawnTimer() * 20L, () -> {
             final ItemStack itemToGive = Items.midLoot.get(r.nextInt(Items.midLoot.size()));
             final Firework fw = (Firework) w.spawnEntity(midLoc, EntityType.FIREWORK);
             final FireworkMeta fwm = fw.getFireworkMeta();
@@ -121,7 +118,7 @@ public class Game {
                 }
 
                 tasks.add(new BukkitRunnable() {
-                    int i = Game.tntRainSecs;
+                    int i = options.getTntRainTimer();
                     @Override
                     public void run() {
                         i--;
@@ -140,7 +137,7 @@ public class Game {
             }
         }));
 
-        tasks.add(TaskUtil.timerAsync(everywhereSpawnSecs * 20, everywhereSpawnSecs * 20, () -> {
+        tasks.add(TaskUtil.timerAsync(options.getEverywhereSpawnTimer() * 20L, options.getEverywhereSpawnTimer() * 20L, () -> {
             final ItemStack itemToGive = Items.everywhereLoot.get(r.nextInt(Items.everywhereLoot.size()));
             for (Player p1 : getPlayers()) {
                 p1.sendMessage(color("&7Everyone was given a " + itemToGive.getItemMeta().getDisplayName() + "&7!"));
@@ -149,43 +146,45 @@ public class Game {
         }));
 
         startTime = System.currentTimeMillis();
-        ParticleTypeMotion particle = particles.FLAME();
-        tasks.add(new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (skyBorderHeight == 260) for (Player p1 : getPlayers()) {
-                    p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
-                    p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
-                    title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
-                }
-
-                if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
-                    skyBorderTarget = 240;
-
-                    for (Player p1 : getPlayers()) {
+        if (options.hasSkyBorder()) {
+            ParticleTypeMotion particle = particles.FLAME();
+            tasks.add(new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (skyBorderHeight == 260) for (Player p1 : getPlayers()) {
                         p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
                         p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
                         title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                     }
-                }
 
-                for (Player player : players) {
-                    for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
-                        for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
-                            particles.sendPacket(getPlayers(), particle.packet(true, x, skyBorderHeight, z));
+                    if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                        skyBorderTarget = 240;
+
+                        for (Player p1 : getPlayers()) {
+                            p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
+                            p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
+                            title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                         }
                     }
-                    if (player.getEyeLocation().getY() >= skyBorderHeight && player.getGameMode() == GameMode.SURVIVAL) {
-                        playerDied(player);
+
+                    for (Player player : players) {
+                        for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
+                            for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
+                                particles.sendPacket(getPlayers(), particle.packet(true, x, skyBorderHeight, z));
+                            }
+                        }
+                        if (player.getEyeLocation().getY() >= skyBorderHeight && player.getGameMode() == GameMode.SURVIVAL) {
+                            playerDied(player);
+                        }
+                    }
+                    if (Math.round(skyBorderHeight) > Math.round(skyBorderTarget)) {
+                        skyBorderHeight = skyBorderHeight - 0.05;
+                    } else if (Math.round(skyBorderHeight) < Math.round(skyBorderTarget)) {
+                        skyBorderHeight = skyBorderHeight + 0.05;
                     }
                 }
-                if (Math.round(skyBorderHeight) > Math.round(skyBorderTarget)) {
-                    skyBorderHeight = skyBorderHeight - 0.05;
-                } else if (Math.round(skyBorderHeight) < Math.round(skyBorderTarget)) {
-                    skyBorderHeight = skyBorderHeight + 0.05;
-                }
-            }
-        }.runTaskTimer(instance, 3*60*20, 5));
+            }.runTaskTimer(instance, 3*60*20, 5));
+        }
 
         for (Player player : getPlayers()) {
             respawn(player);
@@ -236,6 +235,7 @@ public class Game {
 
         PlayerStats playerStats = new PlayerStats(p, teamColor);
         if (dead.contains(p)) playerStats.lives = (byte) 0;
+        else if (players.contains(p)) playerStats.lives = (byte) options.getStartingLives();
         statMap.put(p, playerStats);
         p.setDisplayName(teamColor.chatColor + "" + p.getName());
 
@@ -257,13 +257,13 @@ public class Game {
         }
 
         for (Player player : gamers) {
-            player.sendMessage(color("&8(&a" + gamers.size() + "&8/&a" + Game.maxPlayers + "&8) " + p.getDisplayName() + "&7 joined"));
+            player.sendMessage(color("&8(&a" + gamers.size() + "&8/&a" + options.getMaxPlayers() + "&8) " + p.getDisplayName() + "&7 joined"));
         }
 
         if (state.equals(GameState.WAITING) && getPlayers().size() >= playersNeededToStart) {
             state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
-                int i = gameStartSecs;
+                int i = options.getGameStartTimer();
                 @Override
                 public void run() {
                     if (i < 1) {
@@ -284,7 +284,7 @@ public class Game {
                 }
             }.runTaskTimer(instance, 0, 20));
         }
-        if (getPlayers().size() == maxPlayers) {
+        if (getPlayers().size() == options.getMaxPlayers()) {
             gameStartTask.cancel();
             start();
         }
@@ -399,11 +399,11 @@ public class Game {
         }
 
         tasks.add(new BukkitRunnable() {
-            int i = respawnSecs - 1;
+            int i = options.getRespawnTime() - 1;
 
             @Override
             public void run() {
-                if (i == respawnSecs - 1 && lastHitBy != null && lastHitBy != playerWhoDied) {
+                if (i == options.getRespawnTime() - 1 && lastHitBy != null && lastHitBy != playerWhoDied) {
                     playerWhoDied.setSpectatorTarget(lastHitBy);
                 }
                 i--;
@@ -443,7 +443,7 @@ public class Game {
             public void run() {
                 i++;
 
-                if (i >= (respawnSecs * 4)) {
+                if (i >= (options.getRespawnTime() * 4)) {
                     cancel();
                     stats.spawnProtectionTask = null;
 
@@ -458,7 +458,7 @@ public class Game {
                     return;
                 }
                 if (i % 4 == 0) {
-                    actionbar(playerWhoDied, "&8Your spawn protection wears off in &l" + ((respawnSecs * 4) - i) / 4 + "&8 seconds");
+                    actionbar(playerWhoDied, "&8Your spawn protection wears off in &l" + ((options.getRespawnTime() * 4) - i) / 4 + "&8 seconds");
                     playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.LAVA_POP, 0.25f, 2);
                 }
 
@@ -553,6 +553,10 @@ public class Game {
 
     public List<Player> getGamers() {
         return gamers;
+    }
+
+    public GameOptions getOptions() {
+        return options;
     }
 
 }

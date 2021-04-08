@@ -23,7 +23,7 @@ public class GameManager {
      */
     public static Game addPlayer(Player player) {
         for (Game game : games) {
-            if (game.getGamers().size() < Game.maxPlayers) {
+            if (!game.getOptions().isPrivate() && game.getGamers().size() < game.getOptions().getMaxPlayers()) {
                 game.addPlayer(player);
                 playerToGame.put(player, game);
                 return game;
@@ -34,7 +34,7 @@ public class GameManager {
                 final GamePosition pos = new GamePosition(x,y);
                 if (gamePositions.contains(pos)) continue;
                 final World w = Bukkit.getWorld("sumo");
-                Game game = new Game(w, pos);
+                Game game = new Game(w, pos, null);
                 games.add(game);
                 gamePositions.add(pos);
                 game.addPlayer(player);

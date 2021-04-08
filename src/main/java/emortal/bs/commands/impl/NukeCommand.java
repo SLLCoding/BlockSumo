@@ -25,7 +25,7 @@ public class NukeCommand extends Command {
             Game game = GameManager.getGame((Player) commandSender);
             if (game != null) {
                 game.tasks.add(new BukkitRunnable() {
-                    int i = Game.tntRainSecs;
+                    int i = game.getOptions().getTntRainTimer();
                     @Override
                     public void run() {
                         i--;

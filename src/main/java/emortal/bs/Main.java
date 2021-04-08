@@ -218,19 +218,19 @@ public class Main extends JavaPlugin implements Listener {
                 public void run() {
                     final int i = p.getLevel() + 1;
 
-                    if (i == 20) {
+                    if (i == g.getOptions().getDiamondBlockTimer()) {
                         g.victory(p);
                         cancel();
                         return;
                     }
 
-                    if (i % 5 == 0 || i > 15) {
+                    if (i % g.getOptions().getDiamondBlockTimer() * 0.25 == 0 || i > g.getOptions().getDiamondBlockTimer() * 0.75) {
                         for (Player player : g.getPlayers()) {
-                            if (i > 14) {
-                                title(player, ChatColor.RED + "" + ChatColor.BOLD + (20 - i), p.getDisplayName() + color(" &7is on the diamond block!"), 0, 20, 8);
+                            if (i > (g.getOptions().getDiamondBlockTimer() * 0.75) - 1) {
+                                title(player, ChatColor.RED + "" + ChatColor.BOLD + (g.getOptions().getDiamondBlockTimer() - i), p.getDisplayName() + color(" &7is on the diamond block!"), 0, 20, 8);
                             }
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
-                            player.sendMessage(color("&c&l>> &r" + p.getDisplayName() + " &7has been on the diamond block for &6" + i + " &7seconds!\n&c&l>> &7They win in &6" + (20 - i) + " &7seconds!"));
+                            player.sendMessage(color("&c&l>> &r" + p.getDisplayName() + " &7has been on the diamond block for &6" + i + " &7seconds!\n&c&l>> &7They win in &6" + (g.getOptions().getDiamondBlockTimer() - i) + " &7seconds!"));
                         }
                     }
 
