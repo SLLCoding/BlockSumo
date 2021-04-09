@@ -1,5 +1,6 @@
 package emortal.bs.Util;
 
+import emortal.bs.Main;
 import net.minecraft.server.v1_8_R3.PacketPlayOutWorldBorder;
 import net.minecraft.server.v1_8_R3.WorldBorder;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -16,7 +17,8 @@ public class WorldBorderUtil {
     private static final List<UUID> shownPlayers = new ArrayList<>();
 
     public static void init() {
-        shown.setSize(1);
+        shown.setSize(30_000_000);
+        shown.setWarningDistance(50_000_000);
 
         hidden.setSize(30_000_000);
         hidden.setCenter(0, 0);
