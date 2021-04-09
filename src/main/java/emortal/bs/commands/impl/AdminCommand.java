@@ -16,7 +16,7 @@ public class AdminCommand extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        if (!(sender.getName().equalsIgnoreCase("SuperLegoLuis") || sender.getName().equalsIgnoreCase("emortl"))) return true;
+        if (!(sender.getName().equalsIgnoreCase("superlegoluis") || sender.getName().equalsIgnoreCase("emortl"))) return true;
         if (args.length > 0) {
             if (args[0].equalsIgnoreCase("game")) {
                 if (args.length > 1) {

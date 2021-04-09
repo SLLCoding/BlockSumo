@@ -22,7 +22,7 @@ public class GameCommand extends Command {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         // TODO: Replace with permission check or ownership over the game.
-        if (!(sender.getName().equalsIgnoreCase("SuperLegoLuis") || sender.getName().equalsIgnoreCase("emortl"))) return true;
+        if (!(sender.getName().equalsIgnoreCase("superlegoluis") || sender.getName().equalsIgnoreCase("emortl"))) return true;
         if (args.length > 0) {
             if (args[0].equalsIgnoreCase("nuke")) {
                 Game game = GameManager.getGame((Player) sender);

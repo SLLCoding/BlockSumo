@@ -1,6 +1,7 @@
 package emortal.bs.games;
 
 import com.boydti.fawe.object.schematic.Schematic;
+import com.github.fierioziy.particlenativeapi.api.types.ParticleType;
 import com.github.fierioziy.particlenativeapi.api.types.ParticleTypeMotion;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
@@ -120,7 +121,7 @@ public class Game {
 
                 for (Player p1 : gamers) {
                     p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
-                    p1.sendMessage(color("&7(&c&l!&7) &6TNT is raining from the sky!"));
+                    p1.sendMessage(color("&c(&l!&c) &6TNT is raining from the sky!"));
                     title(p1, "", color("&6TNT is raining from the sky!"), 0, 40, 20);
                 }
 
@@ -154,13 +155,13 @@ public class Game {
 
         startTime = System.currentTimeMillis();
         if (options.hasSkyBorder()) {
-            ParticleTypeMotion particle = particles.FLAME();
+            ParticleType particle = particles.BARRIER();
             tasks.add(new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (skyBorderHeight == 260) for (Player p1 : gamers) {
                         p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
-                        p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
+                        p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                         title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                     }
 
@@ -169,7 +170,7 @@ public class Game {
 
                         for (Player p1 : gamers) {
                             p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
-                            p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
+                            p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                             title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                         }
                     }
