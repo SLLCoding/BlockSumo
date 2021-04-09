@@ -7,6 +7,7 @@ import com.github.fierioziy.particlenativeapi.api.Particles_1_8;
 import com.github.fierioziy.particlenativeapi.core.ParticleNativeCore;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
+import emortal.bs.Util.WorldBorderUtil;
 import emortal.bs.commands.CommandManager;
 import emortal.bs.games.Game;
 import emortal.bs.games.GameManager;
@@ -67,7 +68,9 @@ public class Main extends JavaPlugin implements Listener {
         particleAPI = ParticleNativeCore.loadAPI(this);
         particles = particleAPI.getParticles_1_8();
         getServer().getPluginManager().registerEvents(this,this);
+
         Items.init();
+        WorldBorderUtil.init();
 
         final File schemFolder = new File("./maps/");
         for (File file : schemFolder.listFiles()) {

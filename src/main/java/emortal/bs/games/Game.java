@@ -10,6 +10,7 @@ import emortal.bs.TeamColor;
 import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
+import emortal.bs.Util.WorldBorderUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -364,6 +365,12 @@ public class Game {
         }
         stats.lives--;
 
+        if (stats.lives == 1) {
+            WorldBorderUtil.show(playerWhoDied);
+        } else {
+            WorldBorderUtil.hide(playerWhoDied);
+        }
+
         final boolean wasFinal = stats.lives <= 0;
 
         final Player lastHitBy = stats.getLastHitBy();
@@ -519,6 +526,8 @@ public class Game {
             title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId());
+            WorldBorderUtil.hide(player);
+
             player.sendMessage(color(s.replace("%WINMSG%", winMsg)));
             player.setGameMode(GameMode.SPECTATOR);
         }
