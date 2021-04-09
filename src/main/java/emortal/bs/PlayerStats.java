@@ -58,7 +58,7 @@ public class PlayerStats {
 
         for (byte a = 0; a < 40; a++) {
             final Object particlePacket = particles.SMOKE_LARGE().packetMotion(false, player.getLocation().clone().add(r.nextDouble()*0.2, 0.5+(r.nextDouble()*0.2), r.nextDouble()*0.2), Vector.getRandom().multiply(0.3));
-            particles.sendPacket(GameManager.getGame(player).getPlayers(), particlePacket);
+            particles.sendPacket(GameManager.getGame(player).getGamers(), particlePacket);
         }
     }
 }

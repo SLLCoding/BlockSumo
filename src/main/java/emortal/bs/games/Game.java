@@ -87,13 +87,6 @@ public class Game {
         map.paste(worldeditWorld, worldeditVector);
     }
 
-    public List<Player> getPlayers() {
-        final List<Player> list = new ArrayList<>();
-        list.addAll(players);
-        list.addAll(dead);
-        return list;
-    }
-
     public void start() {
         state = GameState.PLAYING;
 
@@ -105,7 +98,7 @@ public class Game {
             final FireworkMeta fwm = fw.getFireworkMeta();
 
             final TeamColor randomColor = TeamColor.values()[r.nextInt(TeamColor.values().length)];
-            final FireworkEffect effect = FireworkEffect.builder().withColor(randomColor.color).build();
+            final FireworkEffect effect = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(randomColor.color).build();
             fwm.addEffect(effect);
             fwm.setPower(1);
             fw.setFireworkMeta(fwm);
@@ -118,14 +111,14 @@ public class Game {
             i.setCustomNameVisible(true);
 
 
-            for (Player p1 : getPlayers()) {
+            for (Player p1 : gamers) {
                 p1.sendMessage(color(itemToGive.getItemMeta().getDisplayName() + " &7has spawned in middle!"));
             }
 
             if (!hasRainedTNT && r.nextInt(100) < 5) {
                 hasRainedTNT = true;
 
-                for (Player p1 : getPlayers()) {
+                for (Player p1 : gamers) {
                     p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
                     p1.sendMessage(color("&7(&c&l!&7) &6TNT is raining from the sky!"));
                     title(p1, "", color("&6TNT is raining from the sky!"), 0, 40, 20);
@@ -153,7 +146,7 @@ public class Game {
 
         tasks.add(TaskUtil.timerAsync(options.getEverywhereSpawnTimer() * 20L, options.getEverywhereSpawnTimer() * 20L, () -> {
             final ItemStack itemToGive = Items.everywhereLoot.get(r.nextInt(Items.everywhereLoot.size()));
-            for (Player p1 : getPlayers()) {
+            for (Player p1 : gamers) {
                 p1.sendMessage(color("&7Everyone was given a " + itemToGive.getItemMeta().getDisplayName() + "&7!"));
                 if (p1.getGameMode() == GameMode.SURVIVAL) p1.getInventory().addItem(itemToGive);
             }
@@ -165,7 +158,7 @@ public class Game {
             tasks.add(new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (skyBorderHeight == 260) for (Player p1 : getPlayers()) {
+                    if (skyBorderHeight == 260) for (Player p1 : gamers) {
                         p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
                         p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
                         title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
@@ -174,7 +167,7 @@ public class Game {
                     if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
                         skyBorderTarget = 240;
 
-                        for (Player p1 : getPlayers()) {
+                        for (Player p1 : gamers) {
                             p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
                             p1.sendMessage(color("&7(&c&l!&7) &6The sky is falling in!"));
                             title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
@@ -184,7 +177,7 @@ public class Game {
                     for (Player player : players) {
                         for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
                             for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
-                                particles.sendPacket(getPlayers(), particle.packet(true, x, skyBorderHeight, z));
+                                particles.sendPacket(gamers, particle.packet(true, x, skyBorderHeight, z));
                             }
                         }
                         if (player.getEyeLocation().getY() >= skyBorderHeight && player.getGameMode() == GameMode.SURVIVAL) {
@@ -200,7 +193,7 @@ public class Game {
             }.runTaskTimer(instance, 3*60*20, 5));
         }
 
-        for (Player player : getPlayers()) {
+        for (Player player : gamers) {
             respawn(player);
             player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 1);
         }
@@ -216,7 +209,7 @@ public class Game {
 
         statMap.clear();
 
-        for (Player player : getPlayers()) {
+        for (Player player : gamers) {
             title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId(), this);
@@ -226,7 +219,7 @@ public class Game {
         TaskUtil.later(5 * 20, () -> {
             GameManager.getGames().remove(this);
             GameManager.getGamePositions().remove(pos);
-            for (Player player : getPlayers()) {
+            for (Player player : gamers) {
                 GameManager.addPlayer(player);
             }
         });
@@ -237,8 +230,8 @@ public class Game {
         p.teleport(midLoc);
         p.setGameMode(GameMode.SPECTATOR);
 
-        if (!(state.equals(GameState.PLAYING) || state.equals(GameState.ENDING))) players.add(p);
-        else dead.add(p);
+        if (state.equals(GameState.PLAYING) || state.equals(GameState.ENDING)) dead.add(p);
+        else players.add(p);
         gamers.add(p);
         GameManager.getPlayerToGame().put(p.getUniqueId(), this);
 
@@ -266,7 +259,7 @@ public class Game {
             if (player.canSee(p)) player.hidePlayer(p);
             if (p.canSee(player)) p.hidePlayer(player);
         }
-        for (Player player : getPlayers()) {
+        for (Player player : gamers) {
             if (!player.canSee(p)) player.showPlayer(p);
             if (!p.canSee(player)) p.showPlayer(player);
         }
@@ -275,7 +268,7 @@ public class Game {
             player.sendMessage(color("&8(&a" + gamers.size() + "&8/&a" + options.getMaxPlayers() + "&8) " + p.getDisplayName() + "&7 joined"));
         }
 
-        if (state.equals(GameState.WAITING) && getPlayers().size() >= playersNeededToStart) {
+        if (state.equals(GameState.WAITING) && gamers.size() >= playersNeededToStart) {
             state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = options.getGameStartTimer();
@@ -288,7 +281,7 @@ public class Game {
                     }
 
                     if (i % 5 == 0 || i < 5) {
-                        for (Player player : getPlayers()) {
+                        for (Player player : gamers) {
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
                             player.sendMessage(color("&6Game starting in &a&l" + i + " &6seconds!"));
                             title(player, color("&a" + i), "", 0, 30, 10);
@@ -299,7 +292,7 @@ public class Game {
                 }
             }.runTaskTimer(instance, 0, 20));
         }
-        if (getPlayers().size() == options.getMaxPlayers()) {
+        if (gamers.size() == options.getMaxPlayers()) {
             gameStartTask.cancel();
             start();
         }
@@ -316,8 +309,8 @@ public class Game {
         statMap.remove(p.getUniqueId());
         GameManager.getPlayerToGame().remove(p.getUniqueId(), this);
 
-        if (getPlayers().size() > 0) updateLives();
-        if (getPlayers().size() == 1) {
+        if (gamers.size() > 0) updateLives();
+        if (gamers.size() == 1) {
             if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
                 state = GameState.WAITING;
@@ -326,7 +319,7 @@ public class Game {
                 return;
             }
             victory(players.get(0));
-        } else if (getPlayers().size() < 1) {
+        } else if (gamers.size() < 1) {
             if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
                 state = GameState.WAITING;
@@ -375,7 +368,7 @@ public class Game {
         final Player lastHitBy = stats.getLastHitBy();
         if (lastHitBy != null) {
             if (playerWhoDied == lastHitBy) {
-                for (Player p : getPlayers()) {
+                for (Player p : gamers) {
                     p.sendMessage(color(playerWhoDied.getDisplayName() + " &7killed themselves. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             } else {
@@ -384,13 +377,13 @@ public class Game {
 
                 statMap.get(lastHitBy.getUniqueId()).kills++;
 
-                for (Player p : getPlayers()) {
+                for (Player p : gamers) {
                     if (p == lastHitBy) continue;
                     p.sendMessage(color(playerWhoDied.getDisplayName() + " &7was killed by " + lastHitBy.getDisplayName() + "&7. " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             }
         } else {
-            for (Player p : getPlayers()) {
+            for (Player p : gamers) {
                 p.sendMessage(color(playerWhoDied.getDisplayName() + " &7died. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
             }
         }
@@ -405,7 +398,7 @@ public class Game {
             final Firework fw = (Firework) w.spawnEntity(playerWhoDied.getLocation(), EntityType.FIREWORK);
             final FireworkMeta fwm = fw.getFireworkMeta();
 
-            final FireworkEffect effect = FireworkEffect.builder().withColor(stats.teamColor.color).build();
+            final FireworkEffect effect = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(stats.teamColor.color).build();
             fwm.addEffect(effect);
             fwm.setPower(1);
             fw.setFireworkMeta(fwm);
@@ -472,7 +465,7 @@ public class Game {
 
                     for (byte a = 0; a < 40; a++) {
                         final Object particlePacket = particles.SMOKE_LARGE().packetMotion(false, playerWhoDied.getLocation().clone().add(r.nextDouble()*0.2, 0.5+(r.nextDouble()*0.2), r.nextDouble()*0.2), Vector.getRandom().multiply(0.3));
-                        particles.sendPacket(getPlayers(), particlePacket);
+                        particles.sendPacket(gamers, particlePacket);
                     }
 
                     return;
@@ -484,7 +477,7 @@ public class Game {
 
                 for (double a = 0; a < Math.PI * 2; a+= Math.PI / 5) {
                     final Object particlePacket = particles.VILLAGER_HAPPY().packet(false, playerWhoDied.getLocation().clone().add(Math.cos(a), 1, Math.sin(a)));
-                    particles.sendPacket(getPlayers(), particlePacket);
+                    particles.sendPacket(gamers, particlePacket);
                 }
 
             }
@@ -520,7 +513,7 @@ public class Game {
 
         final String s = sb.toString();
 
-        for (Player player : getPlayers()) {
+        for (Player player : gamers) {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
             title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
@@ -532,7 +525,7 @@ public class Game {
         TaskUtil.later(5 * 20, () -> {
             GameManager.getGames().remove(this);
             GameManager.getGamePositions().remove(pos);
-            for (Player player : getPlayers()) {
+            for (Player player : gamers) {
                 GameManager.addPlayer(player);
             }
         });
@@ -547,11 +540,11 @@ public class Game {
         lines.add(" ");
         for (PlayerStats value : sortedStats) {
             if (value.lives < 1) continue;
-            lines.add(color(value.player.getDisplayName() + " &8| " + value.coloredLives() + " &8(" + value.kills + ")"));
+            lines.add(color(value.player.getDisplayName() + " &8| " + value.coloredLives()));
         }
 
         lines.add("");
-        lines.add(color("&8emortal.live &m        "));
+        lines.add(color("&6emortal.live &8&m            "));
 
         for (PlayerStats value : sortedStats) {
             value.board.setAll(lines.toArray(new String[0]));
@@ -573,6 +566,10 @@ public class Game {
 
     public List<Player> getGamers() {
         return gamers;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
     }
 
     public GameOptions getOptions() {

@@ -225,7 +225,7 @@ public class Main extends JavaPlugin implements Listener {
                     }
 
                     if (i % g.getOptions().getDiamondBlockTimer() * 0.25 == 0 || i > g.getOptions().getDiamondBlockTimer() * 0.75) {
-                        for (Player player : g.getPlayers()) {
+                        for (Player player : g.getGamers()) {
                             if (i > (g.getOptions().getDiamondBlockTimer() * 0.75) - 1) {
                                 title(player, ChatColor.RED + "" + ChatColor.BOLD + (g.getOptions().getDiamondBlockTimer() - i), p.getDisplayName() + color(" &7is on the diamond block!"), 0, 20, 8);
                             }
