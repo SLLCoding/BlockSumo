@@ -2,12 +2,10 @@ package emortal.bs.games;
 
 import com.boydti.fawe.object.schematic.Schematic;
 import com.github.fierioziy.particlenativeapi.api.types.ParticleType;
-import com.github.fierioziy.particlenativeapi.api.types.ParticleTypeMotion;
 import com.google.common.base.Strings;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import emortal.bs.PlayerStats;
 import emortal.bs.TeamColor;
-import emortal.bs.Util.GamePosition;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
 import emortal.bs.Util.WorldBorderUtil;

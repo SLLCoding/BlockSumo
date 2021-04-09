@@ -22,6 +22,7 @@ public class WorldBorderUtil {
         shown.setCenter(0, 0);
 
         hidden.setSize(30_000_000);
+        hidden.setWarningDistance(0);
         hidden.setCenter(0, 0);
     }
 

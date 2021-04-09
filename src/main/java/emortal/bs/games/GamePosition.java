@@ -1,4 +1,4 @@
-package emortal.bs.Util;
+package emortal.bs.games;
 
 import java.util.Objects;
 

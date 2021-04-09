@@ -1,6 +1,5 @@
 package emortal.bs.games;
 
-import emortal.bs.Util.GamePosition;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
