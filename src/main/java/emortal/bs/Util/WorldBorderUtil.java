@@ -19,6 +19,7 @@ public class WorldBorderUtil {
     public static void init() {
         shown.setSize(30_000_000);
         shown.setWarningDistance(50_000_000);
+        shown.setCenter(0, 0);
 
         hidden.setSize(30_000_000);
         hidden.setCenter(0, 0);
@@ -28,7 +29,6 @@ public class WorldBorderUtil {
         if (shownPlayers.contains(player.getUniqueId())) return;
         shownPlayers.add(player.getUniqueId());
 
-        shown.setCenter(player.getLocation().getX() + 10000, player.getLocation().getZ() + 10000);
         ((CraftPlayer)player).getHandle().playerConnection.sendPacket(new PacketPlayOutWorldBorder(shown, PacketPlayOutWorldBorder.EnumWorldBorderAction.INITIALIZE));
 
     }
