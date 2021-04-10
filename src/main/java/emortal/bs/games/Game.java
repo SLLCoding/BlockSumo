@@ -165,7 +165,7 @@ public class Game {
                         title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                     }
 
-                    if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                    if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(4)) {
                         skyBorderTarget = 240;
 
                         for (Player p1 : gamers) {
@@ -191,7 +191,7 @@ public class Game {
                         skyBorderHeight = skyBorderHeight + 0.05;
                     }
                 }
-            }.runTaskTimer(instance, 3*60*20, 5));
+            }.runTaskTimer(instance, 2*60*20, 5));
         }
 
         for (Player player : gamers) {
