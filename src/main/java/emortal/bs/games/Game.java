@@ -106,7 +106,8 @@ public class Game {
             TaskUtil.laterAsync(2, fw::detonate);
 
             final Item i = w.dropItem(midLoc, itemToGive);
-            i.setVelocity(new Vector(0, 0, 0));
+            i.setVelocity(new Vector(0, 0.2, 0));
+            i.setPickupDelay(0);
             i.setCustomName(itemToGive.getItemMeta().getDisplayName());
             i.setCustomNameVisible(true);
 
@@ -119,7 +120,7 @@ public class Game {
                 hasRainedTNT = true;
 
                 for (Player p1 : gamers) {
-                    p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
+                    p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                     p1.sendMessage(color("&c(&l!&c) &6TNT is raining from the sky!"));
                     title(p1, "", color("&6TNT is raining from the sky!"), 0, 40, 20);
                 }
@@ -159,7 +160,7 @@ public class Game {
                 @Override
                 public void run() {
                     if (skyBorderHeight == 260) for (Player p1 : gamers) {
-                        p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
+                        p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                         p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                         title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                     }
@@ -168,7 +169,7 @@ public class Game {
                         skyBorderTarget = 240;
 
                         for (Player p1 : gamers) {
-                            p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 0.25f);
+                            p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                             p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                             title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
                         }
@@ -195,7 +196,8 @@ public class Game {
 
         for (Player player : gamers) {
             respawn(player);
-            player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 1);
+            title(player, "&a&lGO", "", 0, 20, 20);
+            player.playSound(player.getLocation(), Sound.EXPLODE, 1, 1);
         }
     }
 
@@ -210,7 +212,7 @@ public class Game {
         statMap.clear();
 
         for (Player player : gamers) {
-            title(player, color("&6&lGame Over"), ChatColor.GRAY + "It's a draw!", 0, 100, 0);
+            title(player, color("&6&lDRAW"), ChatColor.GRAY + "Mysterious things happened", 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId(), this);
             player.setGameMode(GameMode.SPECTATOR);
@@ -226,9 +228,9 @@ public class Game {
     }
 
     public void addPlayer(Player p) {
-        p.getInventory().clear();
-        p.teleport(midLoc);
         p.setGameMode(GameMode.SPECTATOR);
+        p.teleport(midLoc);
+        p.getInventory().clear();
 
         if (state.equals(GameState.PLAYING) || state.equals(GameState.ENDING)) dead.add(p);
         else players.add(p);
@@ -284,7 +286,8 @@ public class Game {
                         for (Player player : gamers) {
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
                             player.sendMessage(color("&6Game starting in &a&l" + i + " &6seconds!"));
-                            title(player, color("&a" + i), "", 0, 30, 10);
+                            if (i == 3) player.playSound(player.getLocation(), Sound.FUSE, 1, 1);
+                            title(player, color("&a" + i), "", 0, 0, 20);
                         }
                     }
 
@@ -404,7 +407,7 @@ public class Game {
             final Firework fw = (Firework) w.spawnEntity(playerWhoDied.getLocation(), EntityType.FIREWORK);
             final FireworkMeta fwm = fw.getFireworkMeta();
 
-            final FireworkEffect effect = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(stats.teamColor.color).build();
+            final FireworkEffect effect = FireworkEffect.builder().with(FireworkEffect.Type.BURST).withColor(stats.teamColor.color).build();
             fwm.addEffect(effect);
             fwm.setPower(1);
             fw.setFireworkMeta(fwm);
@@ -433,7 +436,7 @@ public class Game {
                 }
 
                 playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.CLICK, 1, 1);
-                title(playerWhoDied, color((i == 3 ? ChatColor.RED : i == 2 ? ChatColor.GOLD : ChatColor.GREEN) + "" + i), color(lastHitBy == null ? "" : "&7Spectating " + lastHitBy.getDisplayName()), 0, 20, 10);
+                title(playerWhoDied, color((i == 3 ? ChatColor.RED : i == 2 ? ChatColor.GOLD : ChatColor.GREEN) + "" + i), color(lastHitBy == null || lastHitBy == playerWhoDied ? "" : "&7Spectating " + lastHitBy.getDisplayName()), 0, 20, 10);
             }
         }.runTaskTimer(instance, 20, 20));
     }
@@ -462,7 +465,7 @@ public class Game {
             public void run() {
                 i++;
 
-                if (i >= (options.getRespawnTime() * 4)) {
+                if (i > (options.getRespawnTime() * 4)) {
                     cancel();
                     stats.spawnProtectionTask = null;
 
@@ -506,6 +509,7 @@ public class Game {
         Collections.reverse(killList);
         statMap.clear();
 
+        // This is a mess lol
         final StringBuilder sb = new StringBuilder();
         sb.append("&8&m" + Strings.repeat(" ", 50) + "&r\n");
         sb.append(Strings.repeat(" ", 20) + "%WINMSG%");
@@ -519,6 +523,8 @@ public class Game {
 
         final String s = sb.toString();
 
+        winner.setGameMode(GameMode.ADVENTURE);
+
         for (Player player : gamers) {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
             title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
@@ -527,7 +533,7 @@ public class Game {
             WorldBorderUtil.hide(player);
 
             player.sendMessage(color(s.replace("%WINMSG%", winMsg)));
-            player.setGameMode(GameMode.SPECTATOR);
+            if (player != winner) player.setGameMode(GameMode.SPECTATOR);
         }
 
         TaskUtil.later(5 * 20, () -> {

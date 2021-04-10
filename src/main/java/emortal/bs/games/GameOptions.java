@@ -13,7 +13,7 @@ public class GameOptions {
     private int respawnTime = 5;
     private int gameStartTimer = 10;
     private int midSpawnTimer = 40;
-    private int everywhereSpawnTimer = midSpawnTimer / 2;
+    private int everywhereSpawnTimer = 30;
     private int startingLives = 5;
 
     public boolean isPrivate() {

@@ -40,7 +40,7 @@ public class GameCommand extends Command {
                                 final TNTPrimed tnt = (TNTPrimed) game.midLoc.getWorld().spawnEntity(p.getLocation(), EntityType.PRIMED_TNT);
                                 p.getWorld().playSound(p.getLocation(), Sound.FUSE, 1, 1);
                                 tnt.setFuseTicks(3*20);
-                                tnt.setVelocity(new Vector(0, 0, 0));
+                                tnt.setVelocity(new Vector(0, 0.2, 0));
                             }
                         }
                     }.runTaskTimer(instance, 0, 20));

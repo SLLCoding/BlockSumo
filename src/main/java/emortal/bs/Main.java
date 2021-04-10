@@ -71,6 +71,11 @@ public class Main extends JavaPlugin implements Listener {
 
         Items.init();
         WorldBorderUtil.init();
+        try {
+            CommandManager.init();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         final File schemFolder = new File("./maps/");
         for (File file : schemFolder.listFiles()) {
@@ -82,12 +87,6 @@ public class Main extends JavaPlugin implements Listener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-
-        try {
-            CommandManager.setup();
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
         }
     }
 
@@ -102,7 +101,7 @@ public class Main extends JavaPlugin implements Listener {
 
         Game game = GameManager.addPlayer(p);
 
-        if (game == null) p.kickPlayer("Couldn't find a game, please try again later.");
+        if (game == null) p.kickPlayer("Unable to find a game! Please report this, it is a bug!");
 
         e.setJoinMessage(null);
     }
@@ -117,7 +116,7 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void blockPlace(final BlockPlaceEvent e) {
 
-        // BLOCK FIX FOR VIAVERSION
+        // BLOCK FIX FOR 1.16 players
         // Prevents placing blocks inside yourself
         Location location = e.getPlayer().getLocation();
         Location diff = location.clone().subtract(e.getBlock().getLocation().add(0.5D, 0, 0.5D));
@@ -153,7 +152,6 @@ public class Main extends JavaPlugin implements Listener {
         if (e.getBlockAgainst().getType() == Material.BARRIER) {
             e.setCancelled(true);
             if (Math.abs(e.getPlayer().getLocation().getX()) > Game.gameWidth + 3 || Math.abs(e.getPlayer().getLocation().getZ()) > Game.gameWidth + 3) {
-                e.getPlayer().sendMessage(ChatColor.RED + "Stop that");
                 e.getPlayer().teleport(e.getPlayer().getLocation().subtract(0, 3, 0));
                 e.getPlayer().setVelocity(new Vector(0, -4, 0));
             }
@@ -233,7 +231,7 @@ public class Main extends JavaPlugin implements Listener {
                                 title(player, ChatColor.RED + "" + ChatColor.BOLD + (g.getOptions().getDiamondBlockTimer() - i), p.getDisplayName() + color(" &7is on the diamond block!"), 0, 20, 8);
                             }
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
-                            player.sendMessage(color("&c&l>> &r" + p.getDisplayName() + " &7has been on the diamond block for &6" + i + " &7seconds!\n&c&l>> &7They win in &6" + (g.getOptions().getDiamondBlockTimer() - i) + " &7seconds!"));
+                            player.sendMessage(color("&c(&l!&c) &r" + p.getDisplayName() + " &7has been on the diamond block for &6" + i + " &7seconds!\n&c&l>> &7They win in &6" + (g.getOptions().getDiamondBlockTimer() - i) + " &7seconds!"));
                         }
                     }
 
@@ -330,6 +328,7 @@ public class Main extends JavaPlugin implements Listener {
 
         for (Entity nearbyEntity : e.getEntity().getNearbyEntities(10, 10, 10)) {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
+            if (((Player)nearbyEntity).getGameMode() != GameMode.SURVIVAL) continue;
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = GameManager.getGame((Player) nearbyEntity);
@@ -342,7 +341,7 @@ public class Main extends JavaPlugin implements Listener {
 
             stats.setLastHitBy((Player) e.getEntity().getShooter());
             ((Player) nearbyEntity).damage(0);
-            nearbyEntity.setVelocity(new Vector(xPos, yPos, zPos).normalize().multiply(1.5));
+            nearbyEntity.setVelocity(new Vector(xPos, yPos, zPos).normalize().multiply(1.3));
         }
     }
 
@@ -354,6 +353,7 @@ public class Main extends JavaPlugin implements Listener {
 
         for (Entity nearbyEntity : e.getEntity().getNearbyEntities(10, 10, 10)) {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
+            if (((Player)nearbyEntity).getGameMode() != GameMode.SURVIVAL) continue;
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = GameManager.getGame((Player) nearbyEntity);
@@ -427,7 +427,7 @@ public class Main extends JavaPlugin implements Listener {
                 p.getWorld().playSound(tnt.getLocation(), Sound.FUSE, 1, 1);
                 p.getWorld().playSound(tnt.getLocation(), Sound.DIG_GRASS, 1, 1);
 
-                TaskUtil.later(5*20, () -> entityMap.remove(tnt));
+                TaskUtil.later(10*20, () -> entityMap.remove(tnt));
 
                 return;
         }
@@ -436,6 +436,7 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void inventoryMove(final InventoryClickEvent e) {
         if (e.getClickedInventory() == null) return;
+        if (e.getSlot() == 38) e.setCancelled(true);
         if (e.getClickedInventory().getType() == InventoryType.CRAFTING) e.setCancelled(true);
     }
     @EventHandler

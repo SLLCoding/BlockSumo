@@ -20,7 +20,6 @@ public class Items {
     public static final ItemStack tnt = new ItemStack(Material.TNT);
     public static final ItemStack fireball = new ItemStack(Material.FIREBALL);
     public static final ItemStack snowballs = new ItemStack(Material.SNOW_BALL, 8);
-    public static final ItemStack bat = new ItemStack(Material.WOOD_SWORD);
 
     public static final ItemStack megaBat = new ItemStack(Material.IRON_SWORD);
     public static final ItemStack jumpboost = new ItemStack(Material.POTION, 1, (byte)11);
@@ -48,20 +47,14 @@ public class Items {
         snowMeta.setDisplayName(color("&f&lSnowball"));
         snowballs.setItemMeta(snowMeta);
 
-        final ItemMeta batMeta = bat.getItemMeta();
-        batMeta.setDisplayName(color("&6&lBat"));
-        batMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-        bat.setItemMeta(batMeta);
-        bat.setDurability(Material.WOOD_SWORD.getMaxDurability());
-
-        final ItemMeta megaBatMeta = bat.getItemMeta();
+        final ItemMeta megaBatMeta = megaBat.getItemMeta();
         megaBatMeta.setDisplayName(color("&f&lMega Bat"));
-        megaBatMeta.addEnchant(Enchantment.KNOCKBACK, 3, true);
+        megaBatMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
         megaBat.setItemMeta(megaBatMeta);
         megaBat.setDurability(Material.IRON_SWORD.getMaxDurability());
 
         final PotionMeta jumpMeta = (PotionMeta)jumpboost.getItemMeta();
-        jumpMeta.setDisplayName(color("&a&lJump Boost Potion"));
+        jumpMeta.setDisplayName(color("&a&lJump Boost"));
         jumpMeta.setLore(colorList("&7Lasts for 30 seconds"));
         jumpMeta.setMainEffect(PotionEffectType.JUMP);
         jumpMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
@@ -89,6 +82,5 @@ public class Items {
         everywhereLoot.add(tnt);
         everywhereLoot.add(fireball);
         everywhereLoot.add(snowballs);
-        everywhereLoot.add(bat);
     }
 }

@@ -14,7 +14,7 @@ public class CommandManager {
     private static CommandMap commandMap;
     private static final String key = "blocksumo";
 
-    public static void setup() throws NoSuchFieldException, IllegalAccessException {
+    public static void init() throws NoSuchFieldException, IllegalAccessException {
         commandMap = getCommandMap();
 
         Reflections reflections = new Reflections("emortal.bs.commands.impl");
