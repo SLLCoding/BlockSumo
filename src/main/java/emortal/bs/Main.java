@@ -328,7 +328,7 @@ public class Main extends JavaPlugin implements Listener {
 
         for (Entity nearbyEntity : e.getEntity().getNearbyEntities(10, 10, 10)) {
             if (nearbyEntity.getType() != EntityType.PLAYER) continue;
-            if (((Player)nearbyEntity).getGameMode() != GameMode.SURVIVAL) continue;
+            if (((Player) nearbyEntity).getGameMode() != GameMode.SURVIVAL) continue;
             if (nearbyEntity.getLocation().distance(e.getEntity().getLocation()) > 6) continue;
 
             final Game g = GameManager.getGame((Player) nearbyEntity);
