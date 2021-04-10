@@ -315,6 +315,8 @@ public class Main extends JavaPlugin implements Listener {
         if (e.getState() == PlayerFishEvent.State.FISHING) return;
 
         e.getPlayer().setVelocity(e.getHook().getLocation().subtract(e.getPlayer().getLocation()).toVector().normalize().multiply(2));
+        if (e.getState() == PlayerFishEvent.State.CAUGHT_ENTITY) e.getCaught().setVelocity(e.getPlayer().getLocation().subtract(e.getCaught().getLocation()).toVector().normalize().multiply(2));
+
         e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ITEM_BREAK, 1, 1);
         e.getPlayer().getInventory().setItemInHand(null);
         e.getHook().remove();
