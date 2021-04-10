@@ -397,6 +397,7 @@ public class Main extends JavaPlugin implements Listener {
             case NETHER_STAR:
                 e.setCancelled(true);
 
+                if (stats.lives == 1) WorldBorderUtil.hide(e.getPlayer());
                 stats.lives++;
 
                 g.updateLives();
