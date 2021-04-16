@@ -34,9 +34,8 @@ public class Game {
     public static final int playersNeededToStart = 2;
     public static final int gameWidth = 15;
 
-    private final List<Player> players = new ArrayList<>();
-    private final List<Player> dead = new ArrayList<>();
-    private final List<Player> gamers = new ArrayList<>();
+    public final List<Player> players = new ArrayList<>();
+    public final List<Player> dead = new ArrayList<>();
 
     public final HashMap<UUID, PlayerStats> statMap = new HashMap<>();
     public final List<BukkitTask> tasks = new ArrayList<>();
@@ -112,14 +111,14 @@ public class Game {
             i.setCustomNameVisible(true);
 
 
-            for (Player p1 : gamers) {
+            for (Player p1 : getGamers()) {
                 p1.sendMessage(color(itemToGive.getItemMeta().getDisplayName() + " &7has spawned in middle!"));
             }
 
             if (!hasRainedTNT && r.nextInt(100) < 5) {
                 hasRainedTNT = true;
 
-                for (Player p1 : gamers) {
+                for (Player p1 : getGamers()) {
                     p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                     p1.sendMessage(color("&c(&l!&c) &6TNT is raining from the sky!"));
                     title(p1, "", "&6TNT is raining from the sky!", 0, 40, 20);
@@ -147,7 +146,7 @@ public class Game {
 
         tasks.add(TaskUtil.timerAsync(options.getEverywhereSpawnTimer() * 20L, options.getEverywhereSpawnTimer() * 20L, () -> {
             final ItemStack itemToGive = Items.everywhereLoot.get(r.nextInt(Items.everywhereLoot.size()));
-            for (Player p1 : gamers) {
+            for (Player p1 : getGamers()) {
                 p1.sendMessage(color("&7Everyone was given a " + itemToGive.getItemMeta().getDisplayName() + "&7!"));
                 if (p1.getGameMode() == GameMode.SURVIVAL) p1.getInventory().addItem(itemToGive);
             }
@@ -159,7 +158,7 @@ public class Game {
             tasks.add(new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (skyBorderHeight == 260) for (Player p1 : gamers) {
+                    if (skyBorderHeight == 260) for (Player p1 : getGamers()) {
                         p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                         p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                         title(p1, "", "&6The sky is falling in!", 0, 40, 20);
@@ -168,7 +167,7 @@ public class Game {
                     if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(4)) {
                         skyBorderTarget = 240;
 
-                        for (Player p1 : gamers) {
+                        for (Player p1 : getGamers()) {
                             p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                             p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
                             title(p1, "", "&6The sky is falling in!", 0, 40, 20);
@@ -178,7 +177,7 @@ public class Game {
                     for (Player player : players) {
                         for (double x = player.getLocation().getX() - 3; x <= player.getLocation().getX() + 3; x++) {
                             for (double z = player.getLocation().getZ() - 3; z <= player.getLocation().getZ() + 3; z++) {
-                                particles.sendPacket(gamers, particle.packet(true, x, skyBorderHeight, z));
+                                particles.sendPacket(getGamers(), particle.packet(true, x, skyBorderHeight, z));
                             }
                         }
                         if (player.getEyeLocation().getY() >= skyBorderHeight && player.getGameMode() == GameMode.SURVIVAL) {
@@ -194,7 +193,7 @@ public class Game {
             }.runTaskTimer(instance, 2*60*20, 5));
         }
 
-        for (Player player : gamers) {
+        for (Player player : getGamers()) {
             respawn(player);
             title(player, "&a&lGO", "", 0, 20, 20);
             player.playSound(player.getLocation(), Sound.EXPLODE, 1, 1);
@@ -211,7 +210,7 @@ public class Game {
 
         statMap.clear();
 
-        for (Player player : gamers) {
+        for (Player player : getGamers()) {
             title(player, "&6&lDRAW", ChatColor.GRAY + "Mysterious things happened", 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId(), this);
@@ -221,7 +220,7 @@ public class Game {
         TaskUtil.later(5 * 20, () -> {
             GameManager.getGames().remove(this);
             GameManager.getGamePositions().remove(pos);
-            for (Player player : gamers) {
+            for (Player player : getGamers()) {
                 GameManager.addPlayer(player);
             }
         });
@@ -234,7 +233,7 @@ public class Game {
 
         if (state.equals(GameState.PLAYING) || state.equals(GameState.ENDING)) dead.add(p);
         else players.add(p);
-        gamers.add(p);
+        getGamers().add(p);
         GameManager.getPlayerToGame().put(p.getUniqueId(), this);
 
         TeamColor teamColor = TeamColor.values()[r.nextInt(TeamColor.values().length)];
@@ -261,16 +260,16 @@ public class Game {
             if (player.canSee(p)) player.hidePlayer(p);
             if (p.canSee(player)) p.hidePlayer(player);
         }
-        for (Player player : gamers) {
+        for (Player player : getGamers()) {
             if (!player.canSee(p)) player.showPlayer(p);
             if (!p.canSee(player)) p.showPlayer(player);
         }
 
-        for (Player player : gamers) {
-            player.sendMessage(color("&8(&a" + gamers.size() + "&8/&a" + options.getMaxPlayers() + "&8) " + p.getDisplayName() + "&7 joined"));
+        for (Player player : getGamers()) {
+            player.sendMessage(color("&8(&a" + getGamers().size() + "&8/&a" + options.getMaxPlayers() + "&8) " + p.getDisplayName() + "&7 joined"));
         }
 
-        if (state.equals(GameState.WAITING) && gamers.size() >= playersNeededToStart) {
+        if (state.equals(GameState.WAITING) && getGamers().size() >= playersNeededToStart) {
             state = GameState.STARTING;
             tasks.add(gameStartTask = new BukkitRunnable() {
                 int i = options.getGameStartTimer();
@@ -283,7 +282,7 @@ public class Game {
                     }
 
                     if (i % 5 == 0 || i < 5) {
-                        for (Player player : gamers) {
+                        for (Player player : getGamers()) {
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
                             player.sendMessage(color("&6Game starting in &a&l" + i + " &6seconds!"));
                             if (i == 3) player.playSound(player.getLocation(), Sound.FUSE, 1, 1);
@@ -295,7 +294,7 @@ public class Game {
                 }
             }.runTaskTimer(instance, 0, 20));
         }
-        if (gamers.size() == options.getMaxPlayers()) {
+        if (getGamers().size() == options.getMaxPlayers()) {
             gameStartTask.cancel();
             start();
         }
@@ -303,7 +302,7 @@ public class Game {
     public void removePlayer(Player p) {
         players.remove(p);
         dead.remove(p);
-        gamers.remove(p);
+        getGamers().remove(p);
 
         PlayerStats stats = statMap.get(p.getUniqueId());
         if (stats.spawnProtectionTask != null) stats.spawnProtectionTask.cancel();
@@ -312,8 +311,8 @@ public class Game {
         statMap.remove(p.getUniqueId());
         GameManager.getPlayerToGame().remove(p.getUniqueId(), this);
 
-        if (gamers.size() > 0) updateLives();
-        if (gamers.size() == 1) {
+        if (getGamers().size() > 0) updateLives();
+        if (getGamers().size() == 1) {
             if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
                 state = GameState.WAITING;
@@ -322,7 +321,7 @@ public class Game {
                 return;
             }
             victory(players.get(0));
-        } else if (gamers.size() < 1) {
+        } else if (getGamers().size() < 1) {
             if (state.equals(GameState.STARTING)) {
                 gameStartTask.cancel();
                 state = GameState.WAITING;
@@ -346,7 +345,7 @@ public class Game {
 
         final Block b = w.getBlockAt(loc);
         b.setType(Material.BEDROCK);
-        TaskUtil.later(20*5, () -> { b.setType(Material.WOOL); });
+        TaskUtil.later(20*5, () -> b.setType(Material.WOOL));
 
         return loc.clone().add(0, 1, 0);
     }
@@ -377,7 +376,7 @@ public class Game {
         final Player lastHitBy = stats.getLastHitBy();
         if (lastHitBy != null) {
             if (playerWhoDied == lastHitBy) {
-                for (Player p : gamers) {
+                for (Player p : getGamers()) {
                     p.sendMessage(color(playerWhoDied.getDisplayName() + " &7killed themselves. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             } else {
@@ -386,13 +385,13 @@ public class Game {
 
                 statMap.get(lastHitBy.getUniqueId()).kills++;
 
-                for (Player p : gamers) {
+                for (Player p : getGamers()) {
                     if (p == lastHitBy) continue;
                     p.sendMessage(color(playerWhoDied.getDisplayName() + " &7was killed by " + lastHitBy.getDisplayName() + "&7. " + (stats.lives == 0 ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
                 }
             }
         } else {
-            for (Player p : gamers) {
+            for (Player p : getGamers()) {
                 p.sendMessage(color(playerWhoDied.getDisplayName() + " &7died. " + (wasFinal ? "&b&lFINAL KILL" : stats.coloredLives() + " " + (stats.lives == 1 ? "life" : "lives") + " left")));
             }
         }
@@ -474,7 +473,7 @@ public class Game {
 
                     for (byte a = 0; a < 40; a++) {
                         final Object particlePacket = particles.SMOKE_LARGE().packetMotion(false, playerWhoDied.getLocation().clone().add(r.nextDouble()*0.2, 0.5+(r.nextDouble()*0.2), r.nextDouble()*0.2), Vector.getRandom().multiply(0.3));
-                        particles.sendPacket(gamers, particlePacket);
+                        particles.sendPacket(getGamers(), particlePacket);
                     }
 
                     return;
@@ -486,7 +485,7 @@ public class Game {
 
                 for (double a = 0; a < Math.PI * 2; a+= Math.PI / 5) {
                     final Object particlePacket = particles.VILLAGER_HAPPY().packet(false, playerWhoDied.getLocation().clone().add(Math.cos(a), 1, Math.sin(a)));
-                    particles.sendPacket(gamers, particlePacket);
+                    particles.sendPacket(getGamers(), particlePacket);
                 }
 
             }
@@ -525,7 +524,7 @@ public class Game {
 
         winner.setGameMode(GameMode.ADVENTURE);
 
-        for (Player player : gamers) {
+        for (Player player : getGamers()) {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
             TitleAPI.title(player, winMsg, ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
@@ -539,7 +538,7 @@ public class Game {
         TaskUtil.later(5 * 20, () -> {
             GameManager.getGames().remove(this);
             GameManager.getGamePositions().remove(pos);
-            for (Player player : gamers) {
+            for (Player player : getGamers()) {
                 GameManager.addPlayer(player);
             }
         });
@@ -579,11 +578,10 @@ public class Game {
     }
 
     public List<Player> getGamers() {
-        return gamers;
-    }
-
-    public List<Player> getPlayers() {
-        return players;
+        final List<Player> newList = new ArrayList<>();
+        newList.addAll(dead);
+        newList.addAll(players);
+        return newList;
     }
 
     public GameOptions getOptions() {

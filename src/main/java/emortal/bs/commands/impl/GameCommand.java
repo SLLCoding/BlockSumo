@@ -36,7 +36,7 @@ public class GameCommand extends Command {
                                 cancel();
                                 return;
                             }
-                            for (Player p : game.getPlayers()) {
+                            for (Player p : game.players) {
                                 final TNTPrimed tnt = (TNTPrimed) game.midLoc.getWorld().spawnEntity(p.getLocation(), EntityType.PRIMED_TNT);
                                 p.getWorld().playSound(p.getLocation(), Sound.FUSE, 1, 1);
                                 tnt.setFuseTicks(3*20);
