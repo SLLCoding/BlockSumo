@@ -8,6 +8,7 @@ import emortal.bs.PlayerStats;
 import emortal.bs.TeamColor;
 import emortal.bs.Util.Items;
 import emortal.bs.Util.TaskUtil;
+import emortal.bs.Util.TitleAPI;
 import emortal.bs.Util.WorldBorderUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -26,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import static emortal.bs.Main.*;
 import static emortal.bs.Util.ColorUtil.color;
-import static emortal.bs.Util.TitleAPI.actionbar;
 import static emortal.bs.Util.TitleAPI.title;
 
 public class Game {
@@ -122,7 +122,7 @@ public class Game {
                 for (Player p1 : gamers) {
                     p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                     p1.sendMessage(color("&c(&l!&c) &6TNT is raining from the sky!"));
-                    title(p1, "", color("&6TNT is raining from the sky!"), 0, 40, 20);
+                    title(p1, "", "&6TNT is raining from the sky!", 0, 40, 20);
                 }
 
                 tasks.add(new BukkitRunnable() {
@@ -162,7 +162,7 @@ public class Game {
                     if (skyBorderHeight == 260) for (Player p1 : gamers) {
                         p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                         p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
-                        title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
+                        title(p1, "", "&6The sky is falling in!", 0, 40, 20);
                     }
 
                     if (skyBorderTarget == 250 && System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(4)) {
@@ -171,7 +171,7 @@ public class Game {
                         for (Player p1 : gamers) {
                             p1.playSound(p1.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
                             p1.sendMessage(color("&c(&l!&c) &6The sky is falling in!"));
-                            title(p1, "", color("&6The sky is falling in!"), 0, 40, 20);
+                            title(p1, "", "&6The sky is falling in!", 0, 40, 20);
                         }
                     }
 
@@ -212,7 +212,7 @@ public class Game {
         statMap.clear();
 
         for (Player player : gamers) {
-            title(player, color("&6&lDRAW"), ChatColor.GRAY + "Mysterious things happened", 0, 100, 0);
+            title(player, "&6&lDRAW", ChatColor.GRAY + "Mysterious things happened", 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId(), this);
             player.setGameMode(GameMode.SPECTATOR);
@@ -287,7 +287,7 @@ public class Game {
                             player.playSound(player.getLocation(), Sound.CLICK, 1, 1);
                             player.sendMessage(color("&6Game starting in &a&l" + i + " &6seconds!"));
                             if (i == 3) player.playSound(player.getLocation(), Sound.FUSE, 1, 1);
-                            title(player, color("&a" + i), "", 0, 0, 20);
+                            title(player, "&a" + i, "", 0, 0, 20);
                         }
                     }
 
@@ -398,7 +398,7 @@ public class Game {
         }
 
         updateLives();
-        title(playerWhoDied, color("&c&lYOU DIED!"), color(lastHitBy == null ? "" : lastHitBy == playerWhoDied ? "&7You killed yourself" : "&7Killed by " + lastHitBy.getDisplayName()), 0, 20, 10);
+        title(playerWhoDied, "&c&lYOU DIED!", lastHitBy == null ? "" : lastHitBy == playerWhoDied ? "&7You killed yourself" : "&7Killed by " + lastHitBy.getDisplayName(), 0, 20, 10);
 
         if (wasFinal) {
             dead.add(playerWhoDied);
@@ -436,7 +436,7 @@ public class Game {
                 }
 
                 playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.CLICK, 1, 1);
-                title(playerWhoDied, color((i == 3 ? ChatColor.RED : i == 2 ? ChatColor.GOLD : ChatColor.GREEN) + "" + i), color(lastHitBy == null || lastHitBy == playerWhoDied ? "" : "&7Spectating " + lastHitBy.getDisplayName()), 0, 20, 10);
+                TitleAPI.title(playerWhoDied, (i == 3 ? ChatColor.RED : i == 2 ? ChatColor.GOLD : ChatColor.GREEN) + "" + i, lastHitBy == null || lastHitBy == playerWhoDied ? "" : "&7Spectating " + lastHitBy.getDisplayName(), 0, 20, 10);
             }
         }.runTaskTimer(instance, 20, 20));
     }
@@ -469,7 +469,7 @@ public class Game {
                     cancel();
                     stats.spawnProtectionTask = null;
 
-                    actionbar(playerWhoDied, "&8Your spawn protection has worn off");
+                    TitleAPI.actionbar(playerWhoDied, "&8Your spawn protection has worn off");
                     playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.FIZZ, 0.25f, 1);
 
                     for (byte a = 0; a < 40; a++) {
@@ -480,7 +480,7 @@ public class Game {
                     return;
                 }
                 if (i % 4 == 0) {
-                    actionbar(playerWhoDied, "&8Your spawn protection wears off in &l" + ((options.getRespawnTime() * 4) - i) / 4 + "&8 seconds");
+                    TitleAPI.actionbar(playerWhoDied, "&8Your spawn protection wears off in &l" + ((options.getRespawnTime() * 4) - i) / 4 + "&8 seconds");
                     playerWhoDied.playSound(playerWhoDied.getLocation(), Sound.LAVA_POP, 0.25f, 2);
                 }
 
@@ -527,7 +527,7 @@ public class Game {
 
         for (Player player : gamers) {
             final String winMsg = player == winner ? "&6&lVICTORY" : "&c&lDEFEAT";
-            title(player, color(winMsg), ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
+            TitleAPI.title(player, winMsg, ChatColor.GRAY + "" + winMessages[r.nextInt(winMessages.length)], 0, 100, 0);
 
             GameManager.getPlayerToGame().remove(player.getUniqueId());
             WorldBorderUtil.hide(player);

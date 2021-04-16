@@ -9,6 +9,7 @@ public class ColorUtil {
     public static String color(String s) {
         return ChatColor.translateAlternateColorCodes('&', s);
     }
+
     public static List<String> colorList(String... s) {
         final List<String> stringList = new ArrayList<>();
         for (String s1 : s) {
